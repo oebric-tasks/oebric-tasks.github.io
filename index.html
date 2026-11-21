@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-RW6wa/vITyIROyxyuQ3cS6TZXEsB/5FaCtu4NOK7uI8='; style-src 'unsafe-inline'; connect-src https://oc2.dida.psu.ac.th; img-src blob: data:; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-xX1w/PGZdG5DJPl6zt2nCyAoEA5OJ833YOn2iULHo/k='; style-src 'unsafe-inline'; connect-src https://oc2.dida.psu.ac.th; img-src blob: data:; base-uri 'none'; form-action 'none'">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="งาน OEBRIC">
 <title>งาน OEBRIC</title>
@@ -74,6 +74,15 @@ table{width:100%;border-collapse:collapse;font-size:15px}td{border-bottom:1px so
 .accbar{background:#fff8ec;border:1px solid #e6b85c;border-radius:10px;padding:10px 12px;margin-bottom:12px}
 .who-row{cursor:pointer}
 @media(max-width:560px){.two{grid-template-columns:1fr}}
+.dup{background:#fff4f0;border:1px solid #f0b8a6;border-radius:10px;padding:10px 12px;margin-top:8px;font-size:15px}
+.dup .r{display:flex;gap:8px;align-items:center;justify-content:space-between;border-top:1px dashed #f0cfc4;padding:6px 0}
+.subbar{font-size:13px;color:var(--mute)}
+.panel{background:#f7f6f2;border:1px solid #e2dfd6;border-radius:10px;padding:10px 12px;margin-top:10px}
+.wk h3{margin-bottom:6px}.wk .li{padding:6px 0;border-top:1px solid #efede6;font-size:15px}.wk .li:first-of-type{border-top:0}
+.wk .grp{font-weight:600;margin-top:8px}
+body.present header,body.present .noprint{display:none!important}
+body.present main{max-width:1400px;font-size:22px}body.present .wk .li{font-size:22px}body.present h2{font-size:34px}body.present .kpi b{font-size:44px}
+@media print{header,.noprint{display:none!important}.card{break-inside:avoid}}
 </style>
 </head>
 <body>
@@ -116,6 +125,8 @@ table{width:100%;border-collapse:collapse;font-size:15px}td{border-bottom:1px so
   <button data-v="today" data-click="go" data-a1="today">วันนี้</button>
   <button data-v="who" data-click="go" data-a1="who">ใครค้างอะไร</button>
   <button data-v="proj" data-click="go" data-a1="proj">ตามโปรเจกต์</button>
+  <button data-v="week" data-click="wkGo">📊 สรุปสัปดาห์</button>
+  <button data-v="search" data-click="go" data-a1="search">🔍 ค้นหา</button>
   <button data-click="openForm">＋ เพิ่มงาน</button>
   <button data-click="reload" title="โหลดใหม่">⟳</button>
   <span class="me"><span id="meName"></span> · <a href="#" data-click="doLogout" data-pd="1">ออก</a></span>
@@ -145,6 +156,25 @@ table{width:100%;border-collapse:collapse;font-size:15px}td{border-bottom:1px so
     <div id="whoBody"></div>
   </section>
 
+  <section id="vWeek" class="hide">
+    <div class="noprint" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px"><button class="btn ghost sm" data-click="wkPrev">◀ สัปดาห์ก่อน</button><button class="btn ghost sm" data-click="wkNow">รอบนี้</button><button class="btn ghost sm" data-click="wkNext">สัปดาห์หน้า ▶</button><button class="btn ghost sm" data-click="togglePresent">🖥 โหมดฉายจอ</button><button class="btn ghost sm" data-click="printPage">🖨 พิมพ์ / PDF</button></div>
+    <button id="btnExitPresent" class="btn sm hide" style="position:fixed;top:8px;right:8px;z-index:9" data-click="togglePresent">ออกจากโหมดฉายจอ</button>
+    <h2 id="wkTitle"></h2><p class="sub" id="wkSub"></p>
+    <div class="grid" id="wkKpi"></div>
+    <div id="wkBody" class="wk"></div>
+  </section>
+
+  <section id="vSearch" class="hide">
+    <h2>🔍 ค้นหางาน</h2><p class="sub">ค้นจากชื่องาน · โปรเจกต์ · ชื่อคน · รอใคร — เว้นวรรคได้หลายคำ</p>
+    <div class="card">
+      <input id="sQ" placeholder="เช่น กล้อง ST71 หรือ ปาล์ม" autocomplete="off">
+      <label style="font-weight:400;margin-top:8px"><input type="checkbox" id="sDone" checked> รวมงานที่ปิด/ยกเลิก/รวมแล้ว</label>
+      <label style="font-weight:400;margin-top:4px"><input type="checkbox" id="sLogs"> ค้นในบันทึกด้วย <span class="h">(ช้ากว่า ต้องโหลดบันทึกทั้งหมด)</span></label>
+      <div id="sMsg" class="pend" style="margin-top:6px"></div>
+    </div>
+    <div id="sBody"></div>
+  </section>
+
   <section id="vProj" class="hide">
     <h2>ตามโปรเจกต์</h2><p class="sub">งานที่ยังไม่เสร็จ · เรียงตามวันกำหนด</p>
     <div class="filter" id="fProj"></div>
@@ -154,7 +184,9 @@ table{width:100%;border-collapse:collapse;font-size:15px}td{border-bottom:1px so
   <section id="vForm" class="hide">
     <h2 id="formTitle">เพิ่มงาน</h2>
     <div class="card">
-      <label style="margin-top:0">งานอะไร *</label><input id="fTitle">
+      <div id="fParent" class="panel hide" style="margin:0 0 10px"></div>
+      <label style="margin-top:0">งานอะไร *</label><input id="fTitle" autocomplete="off">
+      <div id="fDup"></div>
       <label>ใครรับผิดชอบ * <span class="h">(มอบให้คนอื่น → เขาต้องกด "รับงาน")</span></label>
       <div class="seg" id="fOwner"></div>
       <div class="h" style="margin-top:4px">📵 = ไม่ได้เปิดเว็บ · ระบบกดรับแทน · <b>คุณเป็นผู้ติดตาม</b> (โทร/ไลน์ตามเอง) · ใครในทีมก็กดปิดงานให้ได้</div>
@@ -167,7 +199,8 @@ table{width:100%;border-collapse:collapse;font-size:15px}td{border-bottom:1px so
         <div><label>เวลา <span class="h">(ถ้ามี)</span></label><input id="fTime" type="time"></div>
       </div>
       <div class="two">
-        <div><label>วันเริ่ม <span class="h">(ถ้ามี · ใช้ทำ Gantt · เว้นว่าง = วันที่รับงาน)</span></label><input id="fStart" type="date"></div><div></div>
+        <div><label>วันเริ่ม <span class="h">(ถ้ามี · ใช้ทำ Gantt · เว้นว่าง = วันที่รับงาน)</span></label><input id="fStart" type="date"></div>
+        <div><label>🔁 งานประจำ <span class="h">(ปิดแล้วสร้างรอบถัดไปให้เอง)</span></label><select id="fRepeat"><option value="">ไม่ทำซ้ำ</option><option value="w1">ทุกสัปดาห์</option><option value="w2">ทุก 2 สัปดาห์</option><option value="m1">ทุกเดือน</option></select></div>
       </div>
       <label style="font-weight:400;margin-top:14px"><input type="checkbox" id="fStar"><span class="star">⭐</span> สำคัญ — เตือนล่วงหน้า 3 วัน <span class="h">(งานทั่วไปเตือน "พรุ่งนี้" กับ "วันนี้")</span></label>
       <label>ลิงก์</label><input id="fLink" placeholder="URL หรือ path ไฟล์">
@@ -187,9 +220,12 @@ table{width:100%;border-collapse:collapse;font-size:15px}td{border-bottom:1px so
       <label style="margin-top:0">สถานะ</label>
       <div class="seg" id="dStatus"></div>
       <div id="dWaitBox" class="hide"><label>รอใคร</label><select id="dWaitSel"></select><input id="dWait" class="hide" style="margin-top:6px" placeholder="พิมพ์ชื่อคนนอกทีม เช่น อ.อ้น · เจ้าหน้าที่ อบจ."></div>
-      <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap"><button class="btn ghost sm" data-click="formEditCur">✏️ แก้รายละเอียด</button><button class="btn ghost sm" data-click="setStatus" data-a1="cancelled">ยกเลิกงาน</button></div>
+      <div id="dActs" style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap"><button class="btn ghost sm" data-click="formEditCur">✏️ แก้รายละเอียด</button><button class="btn ghost sm" data-click="showPost">📅 เลื่อนกำหนด</button><button class="btn ghost sm" data-click="showMerge">🔗 รวมกับงานอื่น (งานซ้ำ)</button><button class="btn ghost sm" data-click="setStatus" data-a1="cancelled">ยกเลิกงาน</button></div>
+      <div id="dPost" class="panel hide"></div>
+      <div id="dMerge" class="panel hide"></div>
       <div id="dLink" style="margin-top:8px;font-size:14px;word-break:break-all"></div>
     </div>
+    <div class="card hide" id="dSubCard"><h3 id="dSubH"></h3><div id="dSubs"></div><button class="btn ghost sm" style="margin-top:8px" data-click="formSubCur">＋ เพิ่มงานย่อย</button></div>
     <div class="card">
       <h3>ไทม์ไลน์ <span class="pend">(เพิ่มอย่างเดียว ไม่ทับของเดิม)</span></h3>
       <div id="dTl" class="tl"></div>
@@ -220,11 +256,12 @@ const CFG = {
   PEOPLE: ['chanon', 'apinya', 'phachara.suk', 'atichart.k', 'chutarat', 'nutwhatcha', 'apysobhon', 'maseetoh'],
   LEADS: ['chanon', 'apinya', 'phachara.suk', 'atichart.k', 'chutarat'],
   NOWEB: ['atichart.k', 'chutarat'],   // สมาชิกที่ไม่เปิดเว็บ: ระบบกดรับแทน · คนมอบเป็นผู้ติดตาม
-  POLL_MIN: 3
+  POLL_MIN: 3,
+  MEET: { dow: 1, from: '12:00' }   // ประชุม OEBRIC จันทร์บ่าย → เปิดหน้าสรุปสัปดาห์เป็นหน้าแรก
 };
 const STORE_KEY = 'oebric_tasks_profiles_v1';
 const STATUS = [['todo', 'ยังไม่เริ่ม'], ['doing', 'กำลังทำ'], ['waiting', 'รอคนอื่น'], ['done', 'เสร็จ']];
-const STL = Object.fromEntries([...STATUS, ['cancelled', 'ยกเลิก']]);
+const STL = Object.fromEntries([...STATUS, ['cancelled', 'ยกเลิก'], ['merged', 'ซ้ำ · รวมแล้ว']]);
 let S = { user: '', pass: '', dir: '' };
 let T = new Map();   // id -> {d, etag}
 let LOGS = [];       // file names in logs/
@@ -233,6 +270,7 @@ let SEEN = {};       // user -> {last_open, notes_ack, overdue_ack}
 let NAMES = Object.assign({}, CFG.NAMES);
 let view = 'today', prevView = 'today', cur = null, editing = null, fromInbox = null, owner = [], reassignMode = false, fOwnerFilter = 'all', pollT = null;
 let pendImgs = { qPrev: [], fPrev: [], dPrev: [] };
+let wkOff = 0, subParent = null, LOGC = new Map(), dupT = null, sT = null;
 let pendingProfile = '', idleT = null;
 const $ = id => document.getElementById(id);
 
@@ -416,7 +454,7 @@ async function start() {
   fOwnerFilter = CFG.LEADS.includes(S.user) ? 'all' : S.user;
   await reload(true);
   await saveSeen({ last_open: bkk().iso });
-  go(location.hash === '#quick' ? 'quick' : 'today');
+  go(location.hash === '#quick' ? 'quick' : location.hash === '#week' || isMeetingTime() ? 'week' : 'today');
   maybeModal();
   window.APP_READY = true;
   bumpIdle();
@@ -446,12 +484,12 @@ async function reload(silent) {
 }
 
 /* ---------- navigation ---------- */
-function go(v) { if (v !== 'form' && v !== 'detail') prevView = v; view = v; ['vQuick', 'vToday', 'vWho', 'vProj', 'vForm', 'vDetail'].forEach(x => $(x).classList.add('hide')); $({ quick: 'vQuick', today: 'vToday', who: 'vWho', proj: 'vProj', form: 'vForm', detail: 'vDetail' }[v]).classList.remove('hide'); document.querySelectorAll('header button[data-v]').forEach(b => b.classList.toggle('on', b.dataset.v === v)); render(); window.scrollTo(0, 0); }
+function go(v) { if (v !== 'form' && v !== 'detail') prevView = v; view = v; ['vQuick', 'vToday', 'vWho', 'vProj', 'vWeek', 'vSearch', 'vForm', 'vDetail'].forEach(x => $(x).classList.add('hide')); $({ quick: 'vQuick', today: 'vToday', who: 'vWho', proj: 'vProj', week: 'vWeek', search: 'vSearch', form: 'vForm', detail: 'vDetail' }[v]).classList.remove('hide'); document.querySelectorAll('header button[data-v]').forEach(b => b.classList.toggle('on', b.dataset.v === v)); render(); window.scrollTo(0, 0); }
 function back() { go(prevView); maybeModal(); }
-function render() { if (view === 'today') renderToday(); if (view === 'proj') renderProj(); if (view === 'who') renderWho(); }
+function render() { if (view === 'today') renderToday(); if (view === 'proj') renderProj(); if (view === 'who') renderWho(); if (view === 'week') renderWeek(); if (view === 'search') doSearch(); }
 
 /* ---------- lists ---------- */
-function active(d) { return d.status !== 'done' && d.status !== 'cancelled'; }
+function active(d) { return d.status !== 'done' && d.status !== 'cancelled' && d.status !== 'merged'; }
 function matchF(d) { return fOwnerFilter === 'all' || owners(d).includes(fOwnerFilter) || (followOf(d) === fOwnerFilter && active(d)); }
 function filterBar(id) { const opts = [[S.user, 'งานของฉัน'], ['all', 'ทั้งหมด']].concat(CFG.PEOPLE.filter(p => p !== S.user).map(p => [p, who(p)])); $(id).innerHTML = opts.map(([k, l]) => `<button class="${fOwnerFilter === k ? 'on' : ''}" data-click="setFilter" data-a1="${esc(k)}">${esc(l)}</button>`).join(''); }
 function row(d, whenTxt, whenCls) {
@@ -459,8 +497,8 @@ function row(d, whenTxt, whenCls) {
   return `<div class="row" data-id="${esc(d.id)}" data-click="openDetail" data-a1="${esc(d.id)}">
     <div class="chk ${d.status === 'done' ? 'done' : ''}" title="กดเสร็จ" data-click="toggleDone" data-a1="${esc(d.id)}"></div>
     <div class="when ${whenCls || ''}">${esc(whenTxt || '—')}</div>
-    <div class="t">${d.star ? '<span class="star">⭐</span> ' : ''}${esc(d.title)}
-      <div class="meta">${isPending(d) ? `<span class="pendtag">📨 รอรับ: ${esc(pendingOwners(d).map(who).join(', '))}</span>` : ''}${owners(d).map(tagOf).join('')}${followTxt(d)}${d.project ? `<span class="tag proj">${esc(d.project)}</span>` : ''}<span class="st st-${esc(d.status)}">${esc(STL[d.status] || d.status)}${d.status === 'waiting' && d.waiting_for ? ' · ' + esc(who(d.waiting_for)) : ''}</span>${d.delegate ? ' → ' + esc(d.delegate) : ''}${d.due_time ? ' 🕘' + esc(d.due_time) : ''}${nLog ? ' 📝' + nLog : ''}${d.status === 'done' && d.done_by ? ' · ✓ โดย ' + esc(who(d.done_by)) : ''}</div></div></div>`;
+    <div class="t">${d.star ? '<span class="star">⭐</span> ' : ''}${d.repeat ? '🔁 ' : ''}${esc(d.title)}${subInfo(d)}
+      <div class="meta">${isPending(d) ? `<span class="pendtag">📨 รอรับ: ${esc(pendingOwners(d).map(who).join(', '))}</span>` : ''}${owners(d).map(tagOf).join('')}${followTxt(d)}${d.project ? `<span class="tag proj">${esc(d.project)}</span>` : ''}<span class="st st-${esc(d.status)}">${esc(STL[d.status] || d.status)}${d.status === 'waiting' && d.waiting_for ? ' · ' + esc(who(d.waiting_for)) : ''}</span>${d.delegate ? ' → ' + esc(d.delegate) : ''}${d.due_time ? ' 🕘' + esc(d.due_time) : ''}${nLog ? ' 📝' + nLog : ''}${(d.due_history || []).length ? ' ↪' + d.due_history.length : ''}${d.status === 'done' && d.done_by ? ' · ✓ โดย ' + esc(who(d.done_by)) : ''}</div></div></div>`;
 }
 function card(title, color, rows) { return rows.length ? `<div class="card"><h3 style="color:${color || 'inherit'}">${title} (${rows.length})</h3>${rows.join('')}</div>` : ''; }
 function renderToday() {
@@ -550,8 +588,9 @@ function sortInbox(name) { const x = INBOX.find(i => i.name === name); if (!x) r
 /* ---------- form ---------- */
 function setOwnerSeg(list) { owner = list.slice(); document.querySelectorAll('#fOwner button').forEach(b => b.classList.toggle('on', owner.includes(b.dataset.o))); }
 function buildOwnerSeg() { $('fOwner').innerHTML = CFG.PEOPLE.map(p => `<button data-o="${esc(p)}"${CFG.NOWEB.includes(p) ? ' title="ไม่ได้เปิดเว็บ — ระบบกดรับแทน คุณเป็นผู้ติดตาม"' : ''}>${esc(who(p))}${p === S.user ? ' (ฉัน)' : ''}${isNoweb(p) ? ' 📵' : ''}</button>`).join(''); document.querySelectorAll('#fOwner button').forEach(b => b.onclick = () => { const o = b.dataset.o; setOwnerSeg(owner.includes(o) ? owner.filter(x => x !== o) : owner.concat(o)); }); }
-function openForm(d, prefill) {
+function openForm(d, prefill, parentId) {
   editing = d || null;
+  subParent = d ? null : (parentId || null);
   if (!prefill && !d) fromInbox = null;
   $('formTitle').textContent = d ? 'แก้รายละเอียดงาน' : (fromInbox ? 'จัดงานจากกล่องรอจัด' : 'เพิ่มงาน');
   $('fTitle').value = d ? d.title : (prefill || '');
@@ -562,6 +601,13 @@ function openForm(d, prefill) {
   $('fDelegate').value = d ? (d.delegate || '') : '';
   $('fDate').value = d ? (d.due_date || '') : '';
   $('fStart').value = d ? (d.start_date || '') : '';
+  $('fRepeat').value = d ? (d.repeat || '') : '';
+  const par = subParent && T.get(subParent) ? T.get(subParent).d : null;
+  $('fParent').classList.toggle('hide', !par);
+  if (par) { $('fParent').innerHTML = '↳ งานย่อยของ <b>' + esc(par.title) + '</b>'; $('fProjIn').value = par.project || ''; $('fDate').value = par.due_date || ''; }
+  $('fDup').innerHTML = '';
+  $('fTitle').oninput = () => { clearTimeout(dupT); dupT = setTimeout(checkDup, 250); };
+  if (!d && prefill) setTimeout(checkDup, 0);
   $('fTime').value = d ? (d.due_time || '') : '';
   $('fStar').checked = d ? !!d.star : false;
   $('fLink').value = d ? (d.link || '') : '';
@@ -578,6 +624,12 @@ async function saveForm() {
   if (!$('fDate').value) { $('fErr').textContent = 'ใส่วันกำหนด'; return; }
   if ($('fTime').value && !$('fDate').value) { $('fErr').textContent = 'ใส่เวลาแล้วต้องใส่วันที่ด้วย'; return; }
   if ($('fStart').value && $('fStart').value > $('fDate').value) { $('fErr').textContent = 'วันเริ่มต้องไม่หลังวันกำหนด'; return; }
+  let postReason = null;
+  if (editing && editing.due_date && $('fDate').value !== editing.due_date) {
+    postReason = prompt('เลื่อนกำหนด ' + thDate(editing.due_date) + ' → ' + thDate($('fDate').value) + '\nเหตุผล (ต้องใส่):', '');
+    if (postReason === null) return;
+    if (!postReason.trim()) { $('fErr').textContent = 'เปลี่ยนวันกำหนด ต้องใส่เหตุผล'; return; }
+  }
   $('btnSave').disabled = true; $('fErr').textContent = '';
   const n = bkk();
   const ow = CFG.PEOPLE.filter(p => owner.includes(p)).concat(owner.filter(p => !CFG.PEOPLE.includes(p))), me = S.user, toOther = ow.some(o => o !== me);
@@ -589,14 +641,15 @@ async function saveForm() {
       ow.filter(o => isNoweb(o) && !(o in acc)).forEach(o => acc[o] = n.iso);
       const fol = ow.some(isNoweb) ? { follow_by: editing.follow_by && !added.some(isNoweb) ? editing.follow_by : me } : { follow_by: null };
       const asg = changed ? Object.assign({ returned_by: null, return_reason: null }, added.some(o => o !== me) ? { assigned_by: me, assigned_at: n.iso } : {}) : {};
-      const d = Object.assign({}, editing, asg, fol, { title, owner: ow, project: $('fProjIn').value.trim() || null, delegate: $('fDelegate').value.trim() || null, due_date: $('fDate').value || null, start_date: $('fStart').value || null, due_time: $('fTime').value || null, star: $('fStar').checked, link: $('fLink').value.trim() || null, updated_by: S.user, updated_at: n.iso });
+      const dh = postReason ? (editing.due_history || []).concat({ from: editing.due_date, to: $('fDate').value, by: me, at: n.iso, reason: postReason.trim() }) : (editing.due_history || []);
+      const d = Object.assign({}, editing, asg, fol, { title, owner: ow, project: $('fProjIn').value.trim() || null, delegate: $('fDelegate').value.trim() || null, due_date: $('fDate').value || null, start_date: $('fStart').value || null, repeat: $('fRepeat').value || null, due_history: dh, due_time: $('fTime').value || null, star: $('fStar').checked, link: $('fLink').value.trim() || null, updated_by: S.user, updated_at: n.iso });
       withAcc(d, acc);
       await putTask(d, T.get(d.id).etag);
-      await writeLog(d.id, { text: changed ? 'ผู้รับผิดชอบ: ' + ow.map(who).join(', ') : 'แก้รายละเอียดงาน', edit: true });
+      await writeLog(d.id, { text: (changed ? 'ผู้รับผิดชอบ: ' + ow.map(who).join(', ') : 'แก้รายละเอียดงาน') + (postReason ? '\n↪ เลื่อนกำหนด ' + thDate(editing.due_date) + ' → ' + thDate(d.due_date) + ' · เหตุผล: ' + postReason.trim() : ''), edit: true });
       toast('บันทึกแล้ว'); openDetail(d.id);
     } else {
       const id = 'T' + n.stamp + '-' + rand4();
-      const d = { id, title, owner: ow, project: $('fProjIn').value.trim() || null, delegate: $('fDelegate').value.trim() || null, due_date: $('fDate').value || null, start_date: $('fStart').value || null, due_time: $('fTime').value || null, star: $('fStar').checked, status: 'todo', waiting_for: null, accepted_by: ow.includes(me) ? { [me]: n.iso } : {}, accepted_at: ow.includes(me) ? n.iso : null, assigned_by: toOther ? S.user : null, assigned_at: toOther ? n.iso : null, returned_by: null, return_reason: null, link: $('fLink').value.trim() || null, created_by: S.user, created_at: n.iso, updated_by: S.user, updated_at: n.iso, done_at: null, gcal_event_id: null };
+      const d = { id, title, owner: ow, project: $('fProjIn').value.trim() || null, delegate: $('fDelegate').value.trim() || null, due_date: $('fDate').value || null, start_date: $('fStart').value || null, repeat: $('fRepeat').value || null, parent: subParent || null, due_history: [], due_time: $('fTime').value || null, star: $('fStar').checked, status: 'todo', waiting_for: null, accepted_by: ow.includes(me) ? { [me]: n.iso } : {}, accepted_at: ow.includes(me) ? n.iso : null, assigned_by: toOther ? S.user : null, assigned_at: toOther ? n.iso : null, returned_by: null, return_reason: null, link: $('fLink').value.trim() || null, created_by: S.user, created_at: n.iso, updated_by: S.user, updated_at: n.iso, done_at: null, gcal_event_id: null };
       ow.filter(isNoweb).forEach(o => d.accepted_by[o] = n.iso);
       if (ow.some(isNoweb)) { d.follow_by = me; if (!d.accepted_at) d.accepted_at = n.iso; }
       withAcc(d, d.accepted_by);
@@ -609,7 +662,7 @@ async function saveForm() {
       }
       await writeLog(id, { text: 'สร้างงาน' + (toOther ? ' · มอบให้ ' + ow.filter(o => o !== me).map(who).join(', ') : '') + (ow.some(isNoweb) ? ' · ' + ow.filter(isNoweb).map(who).join(', ') + ' ไม่ได้เปิดเว็บ → ระบบรับแทน · ติดตามโดย ' + who(me) : '') + (firstText ? '\n' + firstText : ''), imgs });
       if (fromInbox) { const r = await dav('DELETE', 'inbox/' + fromInbox.name); if (r.ok || r.status === 404) INBOX = INBOX.filter(x => x !== fromInbox); fromInbox = null; }
-      toast('เพิ่มงานแล้ว'); go(prevView);
+      toast('เพิ่มงานแล้ว'); if (subParent && T.has(subParent)) { const pid = subParent; subParent = null; openDetail(pid); } else go(prevView);
     }
   } catch (e) { $('fErr').textContent = e.message; if (e.status === 412) await reload(true); }
   $('btnSave').disabled = false;
@@ -624,7 +677,8 @@ async function writeLog(id, x) {
 async function openDetail(id) {
   const t = T.get(id); if (!t) return; cur = t.d;
   const d = cur;
-  $('dTitle').innerHTML = (d.star ? '<span class="star">⭐</span> ' : '') + esc(d.title);
+  $('dTitle').innerHTML = (d.star ? '<span class="star">⭐</span> ' : '') + (d.repeat ? '🔁 ' : '') + esc(d.title);
+  $('dPost').classList.add('hide'); $('dMerge').classList.add('hide');
   $('dSub').innerHTML = owners(d).map(tagOf).join('') + (d.project ? `<span class="tag proj">${esc(d.project)}</span>` : '') + followTxt(d) + (d.start_date ? ' · เริ่ม ' + esc(thDate(d.start_date)) : '') + (d.due_date ? ' · กำหนด ' + esc(thDate(d.due_date, true)) + (d.due_time ? ' ' + esc(d.due_time) : '') : ' · ไม่มีกำหนด') + (d.delegate ? ' · มอบต่อ ' + esc(d.delegate) : '') + ' · สร้างโดย ' + esc(who(d.created_by)) + (d.status === 'done' && d.done_by ? ' · <b style="color:var(--ok)">✓ เสร็จโดย ' + esc(who(d.done_by)) + ' ' + esc(thDate((d.done_at || '').slice(0, 10))) + ' ' + esc((d.done_at || '').slice(11, 16)) + '</b>' : '');
   const pOw = pendingOwners(d), acc0 = accOf(d), retMe = d.returned_by && owners(d).length === 1 && owners(d)[0] === S.user;
   const multi = owners(d).length > 1 ? `<div class="pend" style="margin-top:4px">${owners(d).map(o => esc(who(o)) + (o in acc0 ? ' ✓ รับแล้ว' : ' 📨 รอรับ')).join(' · ')}</div>` : '';
@@ -632,6 +686,19 @@ async function openDetail(id) {
     ? `<div class="accbar">📨 ${esc(who(d.assigned_by || d.created_by))} มอบงานนี้ให้คุณ${retMe ? ` (↩️ ${esc(who(d.returned_by))} ส่งกลับ${d.return_reason ? ': ' + esc(d.return_reason) : ''})` : ''}${multi}<button class="btn sm" style="margin-top:6px" data-click="acceptTask" data-a1="${esc(d.id)}">${retMe ? 'รับทำเอง' : 'รับงาน'}</button> ${retMe ? `<button class="btn ghost sm" style="margin-top:6px" data-click="reassign" data-a1="${esc(d.id)}">มอบคนอื่น</button>` : `<button class="btn ghost sm" style="margin-top:6px" data-click="rejectTask" data-a1="${esc(d.id)}">ไม่ใช่ของฉัน</button>`}</div>`
     : pOw.length ? `<div class="accbar">⏳ รอ ${esc(pOw.map(who).join(', '))} กดรับงาน (มอบโดย ${esc(who(d.assigned_by || d.created_by))} · ${esc(ago(d.assigned_at))})${multi}</div>`
     : multi ? `<div class="card" style="padding:8px 12px">${multi}</div>` : '';
+  const parT = d.parent && T.get(d.parent);
+  if (parT) $('dAcc').innerHTML = `<div class="panel" style="margin:0 0 10px">↳ งานย่อยของ <a href="#" data-click="openDetail" data-a1="${esc(d.parent)}" data-pd="1"><b>${esc(parT.d.title)}</b></a></div>` + $('dAcc').innerHTML;
+  if (d.repeat) $('dAcc').innerHTML += `<div class="panel" style="margin:0 0 10px">🔁 งานประจำ ${esc(REP[d.repeat] || '')} · ปิดงานรอบนี้แล้วระบบสร้างรอบถัดไปให้เอง${d.next_id && T.get(d.next_id) ? ` · <a href="#" data-click="openDetail" data-a1="${esc(d.next_id)}" data-pd="1">ไปรอบถัดไป (${esc(thDate(T.get(d.next_id).d.due_date))})</a>` : ''}</div>`;
+  if ((d.due_history || []).length) $('dAcc').innerHTML += `<div class="panel" style="margin:0 0 10px">↪ เลื่อนกำหนดแล้ว ${d.due_history.length} ครั้ง${d.due_history.slice(-3).reverse().map(h => `<div class="subbar">${esc(thDate(h.from))} → ${esc(thDate(h.to))} · ${esc(who(h.by))} · ${esc(h.reason || '')}</div>`).join('')}</div>`;
+  if (d.status === 'merged') {
+    const mt = T.get(d.merged_into), canUn = d.merged_at && Date.now() - Date.parse(d.merged_at) < 7 * 86400000;
+    $('dAcc').innerHTML = `<div class="dup" style="margin:0 0 10px">🔗 งานนี้ถูกรวมเข้ากับ ${mt ? `<a href="#" data-click="openDetail" data-a1="${esc(d.merged_into)}" data-pd="1"><b>${esc(mt.d.title)}</b></a>` : esc(d.merged_into)} โดย ${esc(who(d.merged_by))} ${esc(ago(d.merged_at))}${canUn ? `<br><button class="btn ghost sm" style="margin-top:6px" data-click="unmerge" data-a1="${esc(d.id)}">แยกออก (รวมผิด)</button>` : '<div class="subbar">เกิน 7 วันแล้ว แยกออกไม่ได้</div>'}</div>`;
+  }
+  $('dStatus').parentElement.querySelectorAll('#dStatus,#dActs').forEach(x => x.classList.toggle('hide', d.status === 'merged'));
+  const kids = [...T.values()].map(x => x.d).filter(k => k.parent === d.id && k.status !== 'merged').sort((a, b) => (a.due_date || '9').localeCompare(b.due_date || '9'));
+  $('dSubCard').classList.toggle('hide', !!d.parent || d.status === 'merged');
+  $('dSubH').textContent = 'งานย่อย' + (kids.length ? ` (เสร็จ ${kids.filter(k => k.status === 'done').length}/${kids.filter(k => k.status !== 'cancelled').length})` : '');
+  $('dSubs').innerHTML = kids.map(k => row(k, k.due_date ? thDate(k.due_date) : '—', k.due_date && k.due_date < bkk().date && active(k) ? 'late' : '')).join('') || '<div class="pend">ยังไม่มี · แตกงานใหญ่เป็นชิ้นเล็ก แต่ละชิ้นมีเจ้าของ/วันกำหนดของตัวเอง</div>';
   if (followOf(d) && active(d)) $('dAcc').innerHTML += `<div class="accbar" style="background:#eef4fb;border-color:#b9cfe8">📵 ${esc(nowebOf(d).map(who).join(', '))} ไม่ได้เปิดเว็บ · ระบบรับงานแทนแล้ว · <b>${esc(who(followOf(d)))}</b> เป็นผู้ติดตาม (โทร/ไลน์ตาม) · เสร็จแล้วใครในทีมก็กด "เสร็จ" ให้ได้</div>`;
   $('dStatus').innerHTML = STATUS.map(([k, l]) => `<button class="${d.status === k ? 'on' : ''}" data-click="setStatus" data-a1="${esc(k)}">${l}</button>`).join('');
   $('dWaitBox').classList.toggle('hide', d.status !== 'waiting');
@@ -658,10 +725,12 @@ async function setStatus(st, waitOnly) {
   const d0 = cur; if (!d0) return;
   if (st === 'cancelled' && !confirm('ยกเลิกงานนี้?')) return;
   if (st === d0.status && !waitOnly) return;
+  if (st === 'done' && !confirmKids(d0)) return;
   const n = bkk();
-  const d = Object.assign({}, d0, { status: st, updated_by: S.user, updated_at: n.iso, done_at: st === 'done' ? n.iso : null, done_by: st === 'done' ? S.user : null, waiting_for: st === 'waiting' ? (waitVal() || d0.waiting_for || null) : null });
+  const d = Object.assign({}, d0, { status: st, updated_by: S.user, updated_at: n.iso, done_at: st === 'done' ? n.iso : null, done_by: st === 'done' ? S.user : null, waiting_for: st === 'waiting' ? (waitVal() || d0.waiting_for || null) : null, waiting_since: st === 'waiting' ? (d0.status === 'waiting' && d0.waiting_since ? d0.waiting_since : n.iso) : null });
   if (isPendingFor(d0, S.user)) withAcc(d, Object.assign({}, accOf(d0), { [S.user]: n.iso }));
   try {
+    if (st === 'done') await spawnNext(d);
     await putTask(d, T.get(d.id).etag);
     await writeLog(d.id, waitOnly ? { text: 'รอ: ' + (who(d.waiting_for) || '-') } : { status_change: { from: d0.status, to: st }, text: st === 'waiting' && d.waiting_for ? 'รอ: ' + who(d.waiting_for) : '' });
     toast(STL[st] ? 'สถานะ: ' + STL[st] : 'บันทึกแล้ว');
@@ -671,9 +740,10 @@ async function setStatus(st, waitOnly) {
 async function toggleDone(id) {
   const t = T.get(id); if (!t) return;
   const to = t.d.status === 'done' ? 'doing' : 'done', n = bkk();
+  if (to === 'done' && !confirmKids(t.d)) return;
   const d = Object.assign({}, t.d, { status: to, updated_by: S.user, updated_at: n.iso, done_at: to === 'done' ? n.iso : null, done_by: to === 'done' ? S.user : null });
   if (isPendingFor(t.d, S.user)) withAcc(d, Object.assign({}, accOf(t.d), { [S.user]: n.iso }));
-  try { await putTask(d, t.etag); await writeLog(id, { status_change: { from: t.d.status, to } }); toast(to === 'done' ? '✓ เสร็จ' : 'กลับเป็นกำลังทำ'); render(); }
+  try { if (to === 'done') await spawnNext(d); await putTask(d, t.etag); await writeLog(id, { status_change: { from: t.d.status, to } }); toast(to === 'done' ? '✓ เสร็จ' : 'กลับเป็นกำลังทำ'); if (view === 'detail' && cur) openDetail(cur.id); else render(); }
   catch (e) { alert(e.message); if (e.status === 412) reload(true); }
 }
 async function addNote() {
@@ -684,6 +754,166 @@ async function addNote() {
   try { const imgs = await uploadImgs('dPrev', id + '__'); await writeLog(id, { text, imgs }); toast('บันทึกแล้ว'); if (view === 'detail' && cur && cur.id === id) openDetail(id); else render(); }
   catch (e) { alert('บันทึกไม่สำเร็จ: ' + e.message); }
   $('btnNote').disabled = false;
+}
+
+/* ---------- round A: dup · merge · postpone · subtasks · repeat · search · week ---------- */
+const REP = { w1: 'ทุกสัปดาห์', w2: 'ทุก 2 สัปดาห์', m1: 'ทุกเดือน' };
+function subInfo(d) { if (d.parent) { const p = T.get(d.parent); return p ? `<div class="subbar">↳ ${esc(p.d.title)}</div>` : ''; } const k = [...T.values()].filter(x => x.d.parent === d.id && x.d.status !== 'merged' && x.d.status !== 'cancelled'); return k.length ? `<div class="subbar">☰ งานย่อย ${k.filter(x => x.d.status === 'done').length}/${k.length}</div>` : ''; }
+function normT(s) { return String(s || '').toLowerCase().replace(/[่-์็]/g, '').replace(/[\s\-_.,:;!?()\[\]'"“”·\/#+*]+/g, ''); }
+function bigr(s) { const m = new Map(); for (let i = 0; i < s.length - 1; i++) { const b = s.slice(i, i + 2); m.set(b, (m.get(b) || 0) + 1); } return m; }
+function simT(a, b) { a = normT(a); b = normT(b); if (!a || !b) return 0; if (a === b) return 1; if (a.length < 3 || b.length < 3) return 0; const A = bigr(a), B = bigr(b); let x = 0; for (const [k, v] of A) x += Math.min(v, B.get(k) || 0); return 2 * x / (a.length + b.length - 2); }
+function similarTasks(title, opt) {
+  opt = opt || {}; const out = [];
+  for (const { d } of T.values()) {
+    if (!active(d) || d.id === opt.exclude) continue;
+    let sc = simT(title, d.title); if (sc < 0.4) continue;
+    if (opt.project && d.project === opt.project) sc += 0.1;
+    if (opt.due && d.due_date && Math.abs(dayDiff(opt.due, d.due_date)) <= 7) sc += 0.05;
+    if (sc >= 0.5) out.push({ d, sc });
+  }
+  return out.sort((a, b) => b.sc - a.sc).slice(0, opt.n || 3);
+}
+function checkDup() {
+  if (editing || view !== 'form') return;
+  const t = $('fTitle').value.trim(); if (t.length < 4) { $('fDup').innerHTML = ''; return; }
+  const c = similarTasks(t, { project: $('fProjIn').value.trim(), due: $('fDate').value });
+  $('fDup').innerHTML = c.length ? `<div class="dup">⚠ <b>มีงานคล้ายกันอยู่แล้ว</b> — ใช่งานเดียวกันไหม?${c.map(({ d }) => `<div class="r"><div>${esc(d.title)}<div class="subbar">${esc(owners(d).map(who).join(', '))} · กำหนด ${esc(thDate(d.due_date))}${d.project ? ' · ' + esc(d.project) : ''}</div></div><button class="btn ghost sm" data-click="openDetail" data-a1="${esc(d.id)}">เปิดงานนี้</button></div>`).join('')}<div class="subbar" style="margin-top:4px">ถ้าไม่ใช่ กด "บันทึก" ต่อได้เลย · ถ้าใช่ เปิดงานเดิมแล้วเขียนบันทึก/เพิ่มตัวเองเป็นเจ้าของร่วมแทน</div></div>` : '';
+}
+function confirmKids(d) { const k = [...T.values()].filter(x => x.d.parent === d.id && active(x.d)); return !k.length || confirm('งานนี้ยังมีงานย่อยค้าง ' + k.length + ' งาน — ปิดงานหลักเลยไหม? (งานย่อยยังค้างอยู่ตามเดิม)'); }
+function addRep(date, rep) {
+  const [y, m, d] = date.split('-').map(Number);
+  if (rep === 'm1') { const last = new Date(Date.UTC(y, m + 1, 0)).getUTCDate(); return new Date(Date.UTC(y, m, Math.min(d, last))).toISOString().slice(0, 10); }
+  return new Date(Date.UTC(y, m - 1, d + (rep === 'w2' ? 14 : 7))).toISOString().slice(0, 10);
+}
+async function spawnNext(d) {   // งานประจำ: ปิดรอบนี้ → สร้างรอบถัดไป (ครั้งเดียว)
+  if (!d.repeat || d.next_id || !d.due_date) return;
+  const n = bkk(), today = n.date; let due = addRep(d.due_date, d.repeat), guard = 0;
+  while (due < today && guard++ < 60) due = addRep(due, d.repeat);
+  const shift = dayDiff(due, d.due_date);
+  const start = d.start_date ? new Date(Date.parse(d.start_date + 'T00:00:00Z') + shift * 86400000).toISOString().slice(0, 10) : null;
+  const id = 'T' + n.stamp + '-' + rand4(), acc = {}; owners(d).forEach(o => acc[o] = n.iso);
+  const nx = { id, title: d.title, owner: owners(d).slice(), project: d.project || null, delegate: d.delegate || null, due_date: due, due_time: d.due_time || null, start_date: start, star: !!d.star, repeat: d.repeat, series: d.series || d.id, parent: null, due_history: [], status: 'todo', waiting_for: null, accepted_by: acc, accepted_at: n.iso, assigned_by: d.assigned_by || null, assigned_at: d.assigned_by ? n.iso : null, follow_by: d.follow_by || null, returned_by: null, return_reason: null, link: d.link || null, created_by: S.user, created_at: n.iso, updated_by: S.user, updated_at: n.iso, done_at: null, gcal_event_id: null };
+  withAcc(nx, acc);
+  await putTask(nx, null);
+  await writeLog(id, { text: '🔁 งานประจำ ' + (REP[d.repeat] || '') + ' — สร้างรอบนี้อัตโนมัติ หลังรอบ ' + thDate(d.due_date) + ' ปิดโดย ' + who(S.user) });
+  d.next_id = id;
+  toast('🔁 สร้างรอบถัดไปแล้ว: ' + thDate(due));
+}
+function showPost() {
+  if (!cur) return; const box = $('dPost'); $('dMerge').classList.add('hide');
+  if (!box.classList.contains('hide')) { box.classList.add('hide'); return; }
+  const base = cur.due_date && cur.due_date > bkk().date ? cur.due_date : bkk().date;
+  const plus = k => new Date(Date.parse(base + 'T00:00:00Z') + k * 86400000).toISOString().slice(0, 10);
+  box.innerHTML = `<b>📅 เลื่อนกำหนด</b> <span class="subbar">(เดิม ${esc(thDate(cur.due_date || ''))})</span>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px"><button class="btn ghost sm" data-click="setPDate" data-a1="${esc(plus(1))}">+1 วัน</button><button class="btn ghost sm" data-click="setPDate" data-a1="${esc(plus(7))}">+1 สัปดาห์</button><input id="pDate" type="date" style="width:auto" value="${plus(1)}"></div>
+    <label>เหตุผล *</label><input id="pWhy" placeholder="เช่น รอข้อมูลจาก อบจ. · ติดลงพื้นที่">
+    <button class="btn sm" style="margin-top:8px" id="btnPost" data-click="doPostpone">บันทึกการเลื่อน</button> <span id="pErr" class="err"></span>`;
+  box.classList.remove('hide'); setTimeout(() => $('pWhy').focus(), 50);
+}
+async function doPostpone() {
+  const d0 = cur; if (!d0) return; const to = $('pDate').value, why = $('pWhy').value.trim();
+  if (!to) { $('pErr').textContent = 'เลือกวันใหม่'; return; }
+  if (!why) { $('pErr').textContent = 'ต้องใส่เหตุผล'; return; }
+  if (to === d0.due_date) { $('pErr').textContent = 'วันเดิม'; return; }
+  const n = bkk();
+  const d = Object.assign({}, d0, { due_date: to, due_history: (d0.due_history || []).concat({ from: d0.due_date, to, by: S.user, at: n.iso, reason: why }), updated_by: S.user, updated_at: n.iso });
+  if (d.start_date && d.start_date > to) d.start_date = to;
+  $('btnPost').disabled = true;
+  try { await putTask(d, T.get(d.id).etag); await writeLog(d.id, { text: '↪ เลื่อนกำหนด ' + thDate(d0.due_date) + ' → ' + thDate(to) + ' · เหตุผล: ' + why, postpone: true }); toast('เลื่อนกำหนดแล้ว'); openDetail(d.id); }
+  catch (e) { alert(e.message); if (e.status === 412) { await reload(true); openDetail(d0.id); } }
+}
+function showMerge() {
+  if (!cur) return; const box = $('dMerge'); $('dPost').classList.add('hide');
+  if (!box.classList.contains('hide')) { box.classList.add('hide'); return; }
+  box.innerHTML = `<b>🔗 รวมงานนี้เข้ากับงานหลัก</b><div class="subbar">งานนี้จะถูกปิดเป็น "ซ้ำ · รวมแล้ว" · เจ้าของย้ายไปเป็นเจ้าของร่วมของงานหลัก · บันทึกเก่ายังอยู่ · แยกออกได้ภายใน 7 วัน</div>
+    <input id="mQ" placeholder="ค้นชื่องานหลัก…" style="margin-top:6px" autocomplete="off"><div id="mList"></div>`;
+  box.classList.remove('hide');
+  const list = () => {
+    const q = $('mQ').value.trim();
+    const c = q ? [...T.values()].map(x => x.d).filter(d => active(d) && d.id !== cur.id && normT(d.title).includes(normT(q))).slice(0, 8) : similarTasks(cur.title, { exclude: cur.id, project: cur.project, due: cur.due_date, n: 6 }).map(x => x.d);
+    $('mList').innerHTML = c.map(d => `<div class="r" style="display:flex;justify-content:space-between;gap:8px;border-top:1px dashed #ddd;padding:6px 0"><div>${esc(d.title)}<div class="subbar">${esc(owners(d).map(who).join(', '))} · ${esc(thDate(d.due_date))}</div></div><button class="btn sm" data-click="doMerge" data-a1="${esc(cur.id)}" data-a2="${esc(d.id)}">รวมเข้างานนี้</button></div>`).join('') || `<div class="subbar" style="margin-top:6px">${q ? 'ไม่พบ' : 'ไม่พบงานที่ชื่อคล้าย — พิมพ์ค้นชื่องานหลักด้านบน'}</div>`;
+  };
+  $('mQ').oninput = list; list();
+}
+async function doMerge(dupId, mainId) {
+  const td = T.get(dupId), tm = T.get(mainId); if (!td || !tm) return;
+  if (!confirm('รวม "' + td.d.title + '"\nเข้ากับ "' + tm.d.title + '" ?\n\nงานแรกจะถูกปิดเป็น "ซ้ำ · รวมแล้ว"')) return;
+  const n = bkk(), me = S.user, dup = td.d, main = tm.d;
+  const add = owners(dup).filter(o => !owners(main).includes(o)), aD = accOf(dup), acc = Object.assign({}, accOf(main));
+  add.forEach(o => { if (o in aD) acc[o] = aD[o]; else if (isNoweb(o)) acc[o] = n.iso; });
+  const m2 = withAcc(Object.assign({}, main, { owner: owners(main).concat(add), merged_from: (main.merged_from || []).concat(dupId), updated_by: me, updated_at: n.iso }), acc);
+  if (add.some(o => CFG.NOWEB.includes(o)) && !m2.follow_by) m2.follow_by = dup.follow_by || me;
+  if (add.length && add.some(o => !(o in acc))) { m2.assigned_by = me; m2.assigned_at = n.iso; }
+  const d2 = Object.assign({}, dup, { status: 'merged', prev_status: dup.status, merged_into: mainId, merged_by: me, merged_at: n.iso, updated_by: me, updated_at: n.iso });
+  try {
+    await putTask(m2, tm.etag);
+    await putTask(d2, td.etag);
+    await writeLog(mainId, { text: '🔗 รวมงานซ้ำเข้ามา: "' + dup.title + '"' + (add.length ? ' · เจ้าของร่วมเพิ่ม: ' + add.map(who).join(', ') : ''), merge: dupId });
+    await writeLog(dupId, { text: '🔗 รวมเข้ากับ "' + main.title + '" (งานซ้ำ)', merge_into: mainId });
+    for (const k of [...T.values()].filter(x => x.d.parent === dupId)) { await putTask(Object.assign({}, k.d, { parent: mainId, updated_by: me, updated_at: n.iso }), k.etag); await writeLog(k.d.id, { text: 'ย้ายไปเป็นงานย่อยของ "' + main.title + '" (รวมงานซ้ำ)' }); }
+    toast('รวมงานแล้ว'); openDetail(mainId);
+  } catch (e) { alert(e.message); if (e.status === 412) await reload(true); }
+}
+async function unmerge(id) {
+  const t = T.get(id); if (!t || t.d.status !== 'merged') return;
+  if (!confirm('แยกงานนี้ออกมาเป็นงานเดิม?\n(เจ้าของร่วมที่เพิ่มเข้างานหลักแล้วยังอยู่ — ถ้าไม่ต้องการ ไปลบออกที่งานหลัก)')) return;
+  const n = bkk(), me = S.user, tm = T.get(t.d.merged_into);
+  const d = Object.assign({}, t.d, { status: t.d.prev_status && t.d.prev_status !== 'merged' ? t.d.prev_status : 'todo', merged_into: null, merged_by: null, merged_at: null, prev_status: null, updated_by: me, updated_at: n.iso });
+  try {
+    await putTask(d, t.etag);
+    if (tm) { await putTask(Object.assign({}, tm.d, { merged_from: (tm.d.merged_from || []).filter(x => x !== id), updated_by: me, updated_at: n.iso }), tm.etag); await writeLog(tm.d.id, { text: '✂️ แยก "' + d.title + '" ออก (รวมผิด)' }); }
+    await writeLog(id, { text: '✂️ แยกออกจาก "' + (tm ? tm.d.title : '') + '" — กลับเป็นงานปกติ' });
+    toast('แยกออกแล้ว'); openDetail(id);
+  } catch (e) { alert(e.message); if (e.status === 412) await reload(true); }
+}
+/* search */
+async function doSearch() {
+  const q = $('sQ').value.trim().toLowerCase(), terms = q.split(/\s+/).filter(Boolean);
+  $('sQ').oninput = () => { clearTimeout(sT); sT = setTimeout(doSearch, 250); }; $('sDone').onchange = doSearch; $('sLogs').onchange = doSearch;
+  if (!terms.length) { $('sBody').innerHTML = ''; $('sMsg').textContent = 'ทั้งหมด ' + T.size + ' งานในระบบ'; return; }
+  let logTxt = new Map();
+  if ($('sLogs').checked) {
+    const need = LOGS.filter(n => !LOGC.has(n)); let k = 0;
+    if (need.length) { $('sMsg').textContent = 'กำลังโหลดบันทึก… 0/' + need.length; await pool(need, 6, async n => { try { const l = (await getJson('logs/' + n)).d; LOGC.set(n, (l.text || '') + ' ' + who(l.by)); } catch (e) { LOGC.set(n, ''); } if (++k % 20 === 0) $('sMsg').textContent = 'กำลังโหลดบันทึก… ' + k + '/' + need.length; }); }
+    for (const n of LOGS) { const id = n.split('__')[0]; logTxt.set(id, (logTxt.get(id) || '') + ' ' + (LOGC.get(n) || '')); }
+  }
+  const hay = d => [d.title, d.project, d.delegate, d.id, ...owners(d).map(o => o + ' ' + who(o)), d.waiting_for ? who(d.waiting_for) : '', logTxt.get(d.id) || ''].join(' ').toLowerCase();
+  const res = [...T.values()].map(x => x.d).filter(d => ($('sDone').checked || active(d)) && terms.every(t => hay(d).includes(t) || normT(hay(d)).includes(normT(t))))
+    .sort((a, b) => (active(b) - active(a)) || (active(a) ? (a.due_date || '9').localeCompare(b.due_date || '9') : (b.updated_at || '').localeCompare(a.updated_at || '')));
+  $('sMsg').textContent = 'พบ ' + res.length + ' งาน' + (res.length > 100 ? ' (แสดง 100 แรก)' : '');
+  $('sBody').innerHTML = res.length ? '<div class="card">' + res.slice(0, 100).map(d => row(d, d.status === 'done' && d.done_at ? '✓ ' + thDate(d.done_at.slice(0, 10)) : d.due_date ? thDate(d.due_date) : '—', active(d) && d.due_date && d.due_date < bkk().date ? 'late' : '')).join('') + '</div>' : '';
+}
+/* week summary */
+function isMeetingTime() { const n = bkk(), wd = new Date(Date.parse(n.date + 'T00:00:00Z')).getUTCDay(); return wd === CFG.MEET.dow && n.time >= CFG.MEET.from; }
+function addD(s, k) { return new Date(Date.parse(s + 'T00:00:00Z') + k * 86400000).toISOString().slice(0, 10); }
+function togglePresent() { document.body.classList.toggle('present'); $('btnExitPresent').classList.toggle('hide', !document.body.classList.contains('present')); }
+function renderWeek() {
+  const today = bkk().date, wd = new Date(Date.parse(today + 'T00:00:00Z')).getUTCDay();
+  const M0 = addD(today, (CFG.MEET.dow - wd + 7) % 7), M = addD(M0, 7 * wkOff), S0 = addD(M, -6), nextM = addD(M, 7);
+  const inR = s => s && s.slice(0, 10) >= S0 && s.slice(0, 10) <= M;
+  $('wkTitle').textContent = '📊 สรุปสัปดาห์ · ' + thDate(S0, true).replace(/ \d{4}$/, '') + ' – ' + thDate(M, true);
+  $('wkSub').textContent = 'รอบประชุม OEBRIC จันทร์ ' + thDate(M) + (wkOff ? '' : ' (รอบนี้)') + ' · ส่วน "เลยกำหนด / ติดรอ / รอรับ" เป็นสถานะ ณ ตอนนี้';
+  const all = [...T.values()].map(x => x.d), act = all.filter(active);
+  const closed = all.filter(d => d.status === 'done' && inR(d.done_at)).sort((a, b) => (a.done_at || '').localeCompare(b.done_at || ''));
+  const late = act.filter(d => d.due_date && d.due_date < today).sort((a, b) => a.due_date.localeCompare(b.due_date));
+  const wait = act.filter(d => d.status === 'waiting');
+  const pend = act.filter(isPending);
+  const often = act.filter(d => (d.due_history || []).length >= 2).sort((a, b) => b.due_history.length - a.due_history.length);
+  const next = act.filter(d => d.due_date && d.due_date > M && d.due_date <= nextM).sort((a, b) => a.due_date.localeCompare(b.due_date));
+  const neu = all.filter(d => inR(d.created_at) && d.status !== 'merged' && !(d.series && d.series !== d.id));
+  $('wkKpi').innerHTML = [[closed.length, 'ปิดแล้ว', 'var(--ok)'], [late.length, 'เลยกำหนด', 'var(--late)'], [wait.length, 'ติดรอคนอื่น', 'var(--warn)'], [pend.length, 'ยังไม่มีคนรับ', '#b7791f'], [next.length, 'ครบกำหนดรอบหน้า', 'var(--ck)'], [neu.length, 'งานใหม่', 'var(--inb)']].map(([n, l, c]) => `<div class="kpi"><b style="color:${c}">${n}</b><span>${l}</span></div>`).join('');
+  const li = (d, extra) => `<div class="li" data-click="openDetail" data-a1="${esc(d.id)}" style="cursor:pointer">${d.star ? '⭐ ' : ''}${esc(d.title)} <span class="subbar">· ${esc(owners(d).map(who).join(', '))}${d.project ? ' · ' + esc(d.project) : ''}${extra ? ' · ' + extra : ''}</span></div>`;
+  const grp = (arr, key) => { const g = new Map(); arr.forEach(d => { const k = key(d); g.set(k, (g.get(k) || []).concat(d)); }); return [...g.entries()].sort((a, b) => b[1].length - a[1].length); };
+  const sec = (t, c, inner, n) => `<div class="card"><h3 style="color:${c || 'inherit'}">${t} (${n})</h3>${inner || '<div class="pend">— ไม่มี —</div>'}</div>`;
+  let h = '';
+  h += sec('✓ ปิดแล้วในรอบนี้', 'var(--ok)', grp(closed, d => d.done_by || '?').map(([k, a]) => `<div class="grp">${esc(who(k))} · ${a.length} งาน</div>` + a.map(d => li(d, thDate(d.done_at.slice(0, 10)))).join('')).join(''), closed.length);
+  h += sec('⚠ เลยกำหนด', 'var(--late)', late.map(d => li(d, `<b style="color:var(--late)">เลย ${dayDiff(today, d.due_date)} วัน</b>`)).join(''), late.length);
+  h += sec('⌛ ติดรอใคร', 'var(--warn)', grp(wait, d => d.waiting_for ? who(d.waiting_for) : 'ไม่ระบุ').map(([k, a]) => `<div class="grp">รอ ${esc(k)} · ${a.length} งาน</div>` + a.map(d => { const ws = d.waiting_since || d.updated_at; return li(d, ws ? 'รอมา ' + Math.max(0, dayDiff(today, ws.slice(0, 10))) + ' วัน' : ''); }).join('')).join(''), wait.length);
+  h += sec('📨 มอบแล้ว ยังไม่มีคนรับ', '#b7791f', pend.map(d => li(d, 'รอ ' + esc(pendingOwners(d).map(who).join(', ')) + ' · มอบโดย ' + esc(who(d.assigned_by || d.created_by)) + ' ' + esc(ago(d.assigned_at)))).join(''), pend.length);
+  h += sec('↪ เลื่อนกำหนดบ่อย (2 ครั้งขึ้นไป)', 'var(--mute)', often.map(d => li(d, `เลื่อน ${d.due_history.length} ครั้ง · ล่าสุด: ${esc(d.due_history[d.due_history.length - 1].reason || '')}`)).join(''), often.length);
+  h += sec('📅 ครบกำหนดก่อนประชุมรอบหน้า (ถึง จ. ' + thDate(nextM) + ')', 'var(--ck)', next.map(d => li(d, thDate(d.due_date, true).replace(/ \d{4}$/, ''))).join(''), next.length);
+  h += sec('🆕 งานใหม่ในรอบนี้', 'var(--inb)', grp(neu, d => d.project || 'ไม่มีโปรเจกต์').map(([k, a]) => `<div class="li">${esc(k)} · <b>${a.length}</b> งาน</div>`).join(''), neu.length);
+  $('wkBody').innerHTML = h;
 }
 
 /* ---------- seen / modal ---------- */
@@ -700,7 +930,7 @@ function myItems() {
   // tasks I follow: I own (and accepted) OR I assigned (and am not an owner)
   const follow = new Map();
   for (const d of all) {
-    if (d.status === 'cancelled' || pendIds.has(d.id)) continue;
+    if (d.status === 'cancelled' || d.status === 'merged' || pendIds.has(d.id)) continue;
     const own = owners(d).includes(me);
     if (own) follow.set(d.id, { d, cut: accOf(d)[me] || '' });
     else if (d.assigned_by === me) follow.set(d.id, { d, cut: d.assigned_at || '' });
@@ -805,10 +1035,13 @@ const ACT = { acceptTask,
   clickId(id) { $(id).click(); },
   doLogin,
   doLogout,
+  doMerge,
+  doPostpone,
   doUnlock,
   enterUnlock(ev) { if (ev.key === 'Enter') doUnlock(); },
   forgetProfile,
   formEditCur() { openForm(cur); },
+  formSubCur() { openForm(null, '', cur.id); },
   go,
   hideSelf() { this.classList.add('hide'); },
   loginView,
@@ -817,6 +1050,7 @@ const ACT = { acceptTask,
   passHint,
   pickImgsEl(p) { pickImgs(this, p); },
   pickProfile,
+  printPage() { window.print(); },
   reassign,
   rejectTask,
   reload,
@@ -825,11 +1059,20 @@ const ACT = { acceptTask,
   saveQuick,
   setFilter(k) { fOwnerFilter = k; render(); },
   setFilterGo(k) { fOwnerFilter = k; go('today'); },
+  setPDate(v) { $('pDate').value = v; },
   setStatus,
+  showMerge,
   showNew,
+  showPost,
   showProfiles,
   sortInbox,
-  toggleDone };
+  toggleDone,
+  togglePresent,
+  unmerge,
+  wkGo() { wkOff = 0; go('week'); },
+  wkNext() { wkOff++; render(); },
+  wkNow() { wkOff = 0; render(); },
+  wkPrev() { wkOff--; render(); } };
 ['click', 'change', 'input', 'keydown'].forEach(type => document.addEventListener(type, ev => {
   const el = ev.target instanceof Element ? ev.target.closest('[data-' + type + ']') : null; if (!el) return;
   const f = Object.prototype.hasOwnProperty.call(ACT, el.dataset[type]) ? ACT[el.dataset[type]] : null; if (!f) return;
