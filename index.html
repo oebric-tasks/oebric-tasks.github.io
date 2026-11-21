@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src https://oc2.dida.psu.ac.th; img-src blob: data:; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-RW6wa/vITyIROyxyuQ3cS6TZXEsB/5FaCtu4NOK7uI8='; style-src 'unsafe-inline'; connect-src https://oc2.dida.psu.ac.th; img-src blob: data:; base-uri 'none'; form-action 'none'">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="งาน OEBRIC">
 <title>งาน OEBRIC</title>
@@ -82,28 +82,28 @@ table{width:100%;border-collapse:collapse;font-size:15px}td{border-bottom:1px so
 <div id="vLogin" class="lock">
   <h2>งาน OEBRIC</h2>
   <p class="sub">เชื่อม ownCloud (oc2) ตรง · ไม่ผ่านตัวกลาง</p>
-  <div id="lgProfiles" class="card hide"><h3>เข้าด้วยบัญชีที่จำไว้</h3><div id="profList"></div><button class="btn ghost sm" style="margin-top:10px" onclick="showNew()">ใช้บัญชีอื่น</button></div>
+  <div id="lgProfiles" class="card hide"><h3>เข้าด้วยบัญชีที่จำไว้</h3><div id="profList"></div><button class="btn ghost sm" style="margin-top:10px" data-click="showNew">ใช้บัญชีอื่น</button></div>
   <div id="lgUnlock" class="card hide">
     <h3>ปลดล็อก · <span id="unName"></span></h3>
-    <label>รหัสผ่านปลดล็อก</label><input id="unPass" type="password" autocomplete="current-password" onkeydown="if(event.key==='Enter')doUnlock()">
-    <button class="btn" id="btnUnlock" onclick="doUnlock()">เข้าระบบ</button>
-    <button class="btn ghost" onclick="loginView('lgProfiles')">ย้อนกลับ</button>
-    <div style="margin-top:10px"><a href="#" onclick="forgetProfile();return false" style="font-size:14px;color:var(--mute)">ลืมบัญชีนี้จากเครื่องนี้</a></div>
+    <label>รหัสผ่านปลดล็อก</label><input id="unPass" type="password" autocomplete="current-password" data-keydown="enterUnlock">
+    <button class="btn" id="btnUnlock" data-click="doUnlock">เข้าระบบ</button>
+    <button class="btn ghost" data-click="loginView" data-a1="lgProfiles">ย้อนกลับ</button>
+    <div style="margin-top:10px"><a href="#" data-click="forgetProfile" data-pd="1" style="font-size:14px;color:var(--mute)">ลืมบัญชีนี้จากเครื่องนี้</a></div>
   </div>
   <div id="lgNew" class="card hide">
     <h3>เข้าใช้ครั้งแรกบนเครื่องนี้</h3>
     <label>ชื่อผู้ใช้ ownCloud (oc2)</label><input id="inUser" autocomplete="username" autocapitalize="off">
     <label>App password ของ ownCloud</label><input id="inApp" type="password" autocomplete="off">
-    <label style="font-weight:400;margin-top:14px"><input type="checkbox" id="inRemember" checked onchange="$('remBox').classList.toggle('hide',!this.checked)">จำการล็อกอินบนเครื่องนี้ (เครื่องส่วนตัว)</label>
+    <label style="font-weight:400;margin-top:14px"><input type="checkbox" id="inRemember" checked data-change="remToggle">จำการล็อกอินบนเครื่องนี้ (เครื่องส่วนตัว)</label>
     <div id="remBox">
-      <label>ตั้งรหัสผ่านปลดล็อก <span class="h">(อย่างน้อย 12 ตัวอักษร)</span></label><input id="inPass1" type="password" autocomplete="new-password" oninput="passHint()">
-      <label>พิมพ์อีกครั้ง</label><input id="inPass2" type="password" autocomplete="new-password" oninput="passHint()">
+      <label>ตั้งรหัสผ่านปลดล็อก <span class="h">(อย่างน้อย 12 ตัวอักษร)</span></label><input id="inPass1" type="password" autocomplete="new-password" data-input="passHint">
+      <label>พิมพ์อีกครั้ง</label><input id="inPass2" type="password" autocomplete="new-password" data-input="passHint">
       <div id="passHint" class="pend"></div>
     </div>
     <div class="pend" style="margin-top:6px">iPad ส่วนกลาง → ติ๊กออก · ปิดแท็บแล้วต้องใส่ App password ใหม่</div>
     <label>โฟลเดอร์งานบน oc2 <span class="h">(เว้นว่าง = หาเอง)</span></label><input id="inDir" placeholder="OEBRIC_tasks" autocapitalize="off">
-    <button class="btn" id="btnLogin" onclick="doLogin()">เข้าระบบ</button>
-    <button class="btn ghost hide" id="btnBack" onclick="showProfiles()">ย้อนกลับ</button>
+    <button class="btn" id="btnLogin" data-click="doLogin">เข้าระบบ</button>
+    <button class="btn ghost hide" id="btnBack" data-click="showProfiles">ย้อนกลับ</button>
   </div>
   <div id="lerr" class="err"></div>
   <div class="note">• App password ถูกเข้ารหัสด้วยรหัสผ่านปลดล็อก (PBKDF2 600,000 รอบ + AES-GCM) ก่อนเก็บในเครื่อง<br>• ไม่แตะ 15 นาที → ล็อกเอง · รหัสผิด 5 ครั้ง → ลบข้อมูลล็อกอินของเครื่องนั้น<br>• เครื่องหาย → เพิกถอน App password ใน oc2 ตัวเดียว</div>
@@ -112,22 +112,22 @@ table{width:100%;border-collapse:collapse;font-size:15px}td{border-bottom:1px so
 <!-- ===== APP ===== -->
 <div id="vApp" class="hide">
 <header>
-  <button data-v="quick" onclick="go('quick')">⚡ จดไว</button>
-  <button data-v="today" onclick="go('today')">วันนี้</button>
-  <button data-v="who" onclick="go('who')">ใครค้างอะไร</button>
-  <button data-v="proj" onclick="go('proj')">ตามโปรเจกต์</button>
-  <button onclick="openForm()">＋ เพิ่มงาน</button>
-  <button onclick="reload()" title="โหลดใหม่">⟳</button>
-  <span class="me"><span id="meName"></span> · <a href="#" onclick="doLogout();return false">ออก</a></span>
+  <button data-v="quick" data-click="go" data-a1="quick">⚡ จดไว</button>
+  <button data-v="today" data-click="go" data-a1="today">วันนี้</button>
+  <button data-v="who" data-click="go" data-a1="who">ใครค้างอะไร</button>
+  <button data-v="proj" data-click="go" data-a1="proj">ตามโปรเจกต์</button>
+  <button data-click="openForm">＋ เพิ่มงาน</button>
+  <button data-click="reload" title="โหลดใหม่">⟳</button>
+  <span class="me"><span id="meName"></span> · <a href="#" data-click="doLogout" data-pd="1">ออก</a></span>
 </header>
 <main>
   <section id="vQuick" class="hide">
     <h2>⚡ จดไว</h2><p class="sub">พิมพ์อะไรก็ได้ ไปลงกล่อง "รอจัด" · ค่อยจัดทีหลัง</p>
     <div class="card">
       <textarea id="qText" class="qbox" placeholder="พิมพ์อะไรก็ได้ เดี๋ยวค่อยจัด…"></textarea>
-      <input type="file" id="qImg" accept="image/*" multiple class="hide" onchange="pickImgs(this,'qPrev')">
+      <input type="file" id="qImg" accept="image/*" multiple class="hide" data-change="pickImgsEl" data-a1="qPrev">
       <div id="qPrev" class="photos"></div>
-      <div style="display:flex;gap:8px;margin-top:10px"><button class="btn ghost sm" onclick="$('qImg').click()">🖼 รูป</button><button class="btn sm" style="flex:1" id="btnQ" onclick="saveQuick()">ส่ง</button></div>
+      <div style="display:flex;gap:8px;margin-top:10px"><button class="btn ghost sm" data-click="clickId" data-a1="qImg">🖼 รูป</button><button class="btn sm" style="flex:1" id="btnQ" data-click="saveQuick">ส่ง</button></div>
       <div id="qMsg" class="pend" style="margin-top:8px"></div>
     </div>
   </section>
@@ -172,10 +172,10 @@ table{width:100%;border-collapse:collapse;font-size:15px}td{border-bottom:1px so
       <label style="font-weight:400;margin-top:14px"><input type="checkbox" id="fStar"><span class="star">⭐</span> สำคัญ — เตือนล่วงหน้า 3 วัน <span class="h">(งานทั่วไปเตือน "พรุ่งนี้" กับ "วันนี้")</span></label>
       <label>ลิงก์</label><input id="fLink" placeholder="URL หรือ path ไฟล์">
       <div id="fNoteWrap"><label>บันทึกเริ่มต้น</label><textarea id="fNote" rows="2"></textarea>
-        <input type="file" id="fImg" accept="image/*" multiple class="hide" onchange="pickImgs(this,'fPrev')">
-        <button class="btn ghost sm" style="margin-top:8px" onclick="$('fImg').click()">🖼 แนบรูป</button><div id="fPrev" class="photos"></div></div>
-      <button class="btn" id="btnSave" onclick="saveForm()">บันทึก</button>
-      <button class="btn ghost" onclick="back()">ยกเลิก</button>
+        <input type="file" id="fImg" accept="image/*" multiple class="hide" data-change="pickImgsEl" data-a1="fPrev">
+        <button class="btn ghost sm" style="margin-top:8px" data-click="clickId" data-a1="fImg">🖼 แนบรูป</button><div id="fPrev" class="photos"></div></div>
+      <button class="btn" id="btnSave" data-click="saveForm">บันทึก</button>
+      <button class="btn ghost" data-click="back">ยกเลิก</button>
       <div id="fErr" class="err"></div>
     </div>
   </section>
@@ -187,16 +187,16 @@ table{width:100%;border-collapse:collapse;font-size:15px}td{border-bottom:1px so
       <label style="margin-top:0">สถานะ</label>
       <div class="seg" id="dStatus"></div>
       <div id="dWaitBox" class="hide"><label>รอใคร</label><select id="dWaitSel"></select><input id="dWait" class="hide" style="margin-top:6px" placeholder="พิมพ์ชื่อคนนอกทีม เช่น อ.อ้น · เจ้าหน้าที่ อบจ."></div>
-      <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap"><button class="btn ghost sm" onclick="openForm(cur)">✏️ แก้รายละเอียด</button><button class="btn ghost sm" onclick="setStatus('cancelled')">ยกเลิกงาน</button></div>
+      <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap"><button class="btn ghost sm" data-click="formEditCur">✏️ แก้รายละเอียด</button><button class="btn ghost sm" data-click="setStatus" data-a1="cancelled">ยกเลิกงาน</button></div>
       <div id="dLink" style="margin-top:8px;font-size:14px;word-break:break-all"></div>
     </div>
     <div class="card">
       <h3>ไทม์ไลน์ <span class="pend">(เพิ่มอย่างเดียว ไม่ทับของเดิม)</span></h3>
       <div id="dTl" class="tl"></div>
       <label>เพิ่มบันทึก</label><textarea id="dNote" rows="2"></textarea>
-      <input type="file" id="dImg" accept="image/*" multiple class="hide" onchange="pickImgs(this,'dPrev')">
+      <input type="file" id="dImg" accept="image/*" multiple class="hide" data-change="pickImgsEl" data-a1="dPrev">
       <div id="dPrev" class="photos"></div>
-      <button class="btn" id="btnNote" onclick="addNote()">บันทึก</button> <button class="btn ghost" onclick="$('dImg').click()">🖼 แนบรูป</button>
+      <button class="btn" id="btnNote" data-click="addNote">บันทึก</button> <button class="btn ghost" data-click="clickId" data-a1="dImg">🖼 แนบรูป</button>
     </div>
   </section>
 </main>
@@ -207,10 +207,11 @@ table{width:100%;border-collapse:collapse;font-size:15px}td{border-bottom:1px so
   <div id="mBody"></div>
 </div></div>
 <div id="toast" class="toast hide"></div>
-<div id="big" class="big hide" onclick="this.classList.add('hide')"><img id="bigImg" alt=""></div>
+<div id="big" class="big hide" data-click="hideSelf"><img id="bigImg" alt=""></div>
 
 <script>
 'use strict';
+if (window.top !== window.self) { document.documentElement.textContent = ''; throw new Error('framed'); }
 const CFG = {
   OC: 'https://oc2.dida.psu.ac.th',
   DIRS: ['OEBRIC_tasks', 'Shared/OEBRIC_tasks'],
@@ -237,6 +238,12 @@ const $ = id => document.getElementById(id);
 
 /* ---------- utils ---------- */
 function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
+// Names that come from the shared folder (file names, ids, user keys, image names) must match this before use.
+const SAFE_RE = /^[A-Za-z0-9_\u0E00-\u0E7F][A-Za-z0-9_.\-\u0E00-\u0E7F]{0,199}$/;
+function safeName(n) { return typeof n === 'string' && SAFE_RE.test(n) && !n.includes('..') && !['__proto__', 'constructor', 'prototype'].includes(n); }
+function safeImgs(a) { return Array.isArray(a) ? a.filter(safeName) : []; }
+function isObj(x) { return !!x && typeof x === 'object' && !Array.isArray(x); }
+let SKIPPED = 0;
 function b64(bytes) { let s = ''; bytes.forEach(b => s += String.fromCharCode(b)); return btoa(s); }
 function unb64(s) { return Uint8Array.from(atob(s), c => c.charCodeAt(0)); }
 function basic(u, p) { return 'Basic ' + b64(new TextEncoder().encode(u + ':' + p)); }
@@ -268,7 +275,7 @@ function logStamp(n) { const m = /__(\d{8}-\d{6})-(.+)-[0-9a-f]{4}\.json$/.exec(
 function stampToIso(st) { return st.slice(0, 4) + '-' + st.slice(4, 6) + '-' + st.slice(6, 8) + 'T' + st.slice(9, 11) + ':' + st.slice(11, 13) + ':' + st.slice(13, 15) + '+07:00'; }
 
 /* ---------- WebDAV ---------- */
-function davUrl(p) { return CFG.OC + '/remote.php/dav/files/' + encodeURIComponent(S.user) + '/' + (S.dir + '/' + p).split('/').filter(Boolean).map(encodeURIComponent).join('/'); }
+function davUrl(p) { const segs = (S.dir + '/' + p).split('/').filter(Boolean); if (segs.some(x => x === '.' || x === '..')) throw new Error('path ไม่ถูกต้อง'); return CFG.OC + '/remote.php/dav/files/' + encodeURIComponent(S.user) + '/' + segs.map(encodeURIComponent).join('/'); }
 async function dav(method, p, opt) {
   opt = opt || {};
   const h = Object.assign({ Authorization: basic(S.user, S.pass) }, opt.headers || {});
@@ -393,7 +400,7 @@ async function doUnlock() {
 }
 function forgetProfile() { if (!confirm('ลบบัญชีนี้ออกจากเครื่องนี้?')) return; const p = profiles(); delete p[pendingProfile]; saveProfiles(p); showProfiles(); }
 function loginView(w) { ['lgProfiles', 'lgUnlock', 'lgNew'].forEach(x => $(x).classList.toggle('hide', x !== w)); }
-function showProfiles() { const ks = Object.keys(profiles()); if (!ks.length) return showNew(); $('profList').innerHTML = ks.map(k => `<button class="btn ghost" style="margin:4px 6px 0 0" onclick="pickProfile('${esc(k)}')">${esc(who(k))} (${esc(k)})</button>`).join(''); loginView('lgProfiles'); }
+function showProfiles() { const ks = Object.keys(profiles()); if (!ks.length) return showNew(); $('profList').innerHTML = ks.map(k => `<button class="btn ghost" style="margin:4px 6px 0 0" data-click="pickProfile" data-a1="${esc(k)}">${esc(who(k))} (${esc(k)})</button>`).join(''); loginView('lgProfiles'); }
 function pickProfile(k) { pendingProfile = k; $('unName').textContent = who(k); $('lerr').textContent = ''; loginView('lgUnlock'); setTimeout(() => $('unPass').focus(), 50); }
 function showNew(keep) { if (!keep) $('lerr').textContent = ''; $('btnBack').classList.toggle('hide', !Object.keys(profiles()).length); loginView('lgNew'); }
 function bumpIdle() { clearTimeout(idleT); if (S.pass) idleT = setTimeout(() => { S.pass = ''; location.reload(); }, CFG.IDLE_MIN * 60000); }
@@ -404,7 +411,7 @@ function doLogout() { S = { user: '', pass: '', dir: '' }; location.reload(); }
 async function start() {
   $('vLogin').classList.add('hide'); $('vApp').classList.remove('hide');
   $('meName').textContent = who(S.user);
-  try { const n = await getJson('names.json'); Object.assign(NAMES, n.d); } catch (e) { }
+  try { const n = await getJson('names.json'); if (isObj(n.d)) for (const k of Object.keys(n.d)) if (safeName(k) && typeof n.d[k] === 'string') NAMES[k] = n.d[k]; } catch (e) { }
   $('meName').textContent = who(S.user);
   fOwnerFilter = CFG.LEADS.includes(S.user) ? 'all' : S.user;
   await reload(true);
@@ -418,17 +425,21 @@ async function start() {
 async function reload(silent) {
   try {
     const [tl, ll, il, sl] = await Promise.all([propfind('tasks'), propfind('logs'), propfind('inbox'), propfind('seen')]);
-    const keep = new Map();
+    const keep = new Map(); let skipped = 0;
     await pool(tl.filter(f => f.name.endsWith('.json')), 8, async f => {
       const id = f.name.replace(/\.json$/, ''), old = T.get(id);
+      if (!safeName(id)) { skipped++; return; }
       if (old && old.etag && old.etag === f.etag) { keep.set(id, old); return; }
-      const g = await getJson('tasks/' + f.name); keep.set(id, { d: g.d, etag: g.etag || f.etag });
+      let g; try { g = await getJson('tasks/' + f.name); } catch (e) { if (e instanceof SyntaxError) { skipped++; return; } throw e; }
+      if (!isObj(g.d) || g.d.id !== id) { skipped++; return; }   // id inside the file must equal its file name
+      keep.set(id, { d: g.d, etag: g.etag || f.etag });
     });
     T = keep;
-    LOGS = ll.map(f => f.name).filter(n => n.endsWith('.json')).sort();
-    const sv = {}; await pool(sl.filter(f => f.name.endsWith('.json')), 6, async f => { try { sv[f.name.replace(/\.json$/, '')] = (await getJson('seen/' + f.name)).d; } catch (e) { } });
+    LOGS = ll.map(f => f.name).filter(n => n.endsWith('.json') && safeName(n)).sort();
+    const sv = {}; await pool(sl.filter(f => f.name.endsWith('.json') && safeName(f.name)), 6, async f => { try { sv[f.name.replace(/\.json$/, '')] = (await getJson('seen/' + f.name)).d; } catch (e) { } });
     SEEN = sv;
-    INBOX = (await pool(il.filter(f => f.name.endsWith('.json')), 6, async f => ({ name: f.name, d: (await getJson('inbox/' + f.name)).d }))).sort((a, b) => b.name.localeCompare(a.name));
+    INBOX = (await pool(il.filter(f => f.name.endsWith('.json')), 6, async f => { if (!safeName(f.name)) { skipped++; return null; } try { const d = (await getJson('inbox/' + f.name)).d; if (!isObj(d)) { skipped++; return null; } return { name: f.name, d }; } catch (e) { if (e instanceof SyntaxError) { skipped++; return null; } throw e; } })).filter(Boolean).sort((a, b) => b.name.localeCompare(a.name));
+    if (skipped !== SKIPPED) { SKIPPED = skipped; if (skipped) toast('⚠️ ข้าม ' + skipped + ' ไฟล์ที่ชื่อหรือเนื้อหาผิดรูปแบบ — แจ้ง อ.ชนนท์'); }
     if (!silent) toast('โหลดใหม่แล้ว');
     render();
   } catch (e) { if (e.status === 401) { alert('App password ใช้ไม่ได้แล้ว — ต้องเข้าระบบใหม่'); doLogout(); } else toast('โหลดไม่สำเร็จ: ' + e.message); }
@@ -442,11 +453,11 @@ function render() { if (view === 'today') renderToday(); if (view === 'proj') re
 /* ---------- lists ---------- */
 function active(d) { return d.status !== 'done' && d.status !== 'cancelled'; }
 function matchF(d) { return fOwnerFilter === 'all' || owners(d).includes(fOwnerFilter) || (followOf(d) === fOwnerFilter && active(d)); }
-function filterBar(id) { const opts = [[S.user, 'งานของฉัน'], ['all', 'ทั้งหมด']].concat(CFG.PEOPLE.filter(p => p !== S.user).map(p => [p, who(p)])); $(id).innerHTML = opts.map(([k, l]) => `<button class="${fOwnerFilter === k ? 'on' : ''}" onclick="fOwnerFilter='${esc(k)}';render()">${esc(l)}</button>`).join(''); }
+function filterBar(id) { const opts = [[S.user, 'งานของฉัน'], ['all', 'ทั้งหมด']].concat(CFG.PEOPLE.filter(p => p !== S.user).map(p => [p, who(p)])); $(id).innerHTML = opts.map(([k, l]) => `<button class="${fOwnerFilter === k ? 'on' : ''}" data-click="setFilter" data-a1="${esc(k)}">${esc(l)}</button>`).join(''); }
 function row(d, whenTxt, whenCls) {
   const nLog = LOGS.filter(n => n.startsWith(d.id + '__')).length;
-  return `<div class="row" data-id="${esc(d.id)}" onclick="openDetail('${esc(d.id)}')">
-    <div class="chk ${d.status === 'done' ? 'done' : ''}" title="กดเสร็จ" onclick="event.stopPropagation();toggleDone('${esc(d.id)}')"></div>
+  return `<div class="row" data-id="${esc(d.id)}" data-click="openDetail" data-a1="${esc(d.id)}">
+    <div class="chk ${d.status === 'done' ? 'done' : ''}" title="กดเสร็จ" data-click="toggleDone" data-a1="${esc(d.id)}"></div>
     <div class="when ${whenCls || ''}">${esc(whenTxt || '—')}</div>
     <div class="t">${d.star ? '<span class="star">⭐</span> ' : ''}${esc(d.title)}
       <div class="meta">${isPending(d) ? `<span class="pendtag">📨 รอรับ: ${esc(pendingOwners(d).map(who).join(', '))}</span>` : ''}${owners(d).map(tagOf).join('')}${followTxt(d)}${d.project ? `<span class="tag proj">${esc(d.project)}</span>` : ''}<span class="st st-${esc(d.status)}">${esc(STL[d.status] || d.status)}${d.status === 'waiting' && d.waiting_for ? ' · ' + esc(who(d.waiting_for)) : ''}</span>${d.delegate ? ' → ' + esc(d.delegate) : ''}${d.due_time ? ' 🕘' + esc(d.due_time) : ''}${nLog ? ' 📝' + nLog : ''}${d.status === 'done' && d.done_by ? ' · ✓ โดย ' + esc(who(d.done_by)) : ''}</div></div></div>`;
@@ -473,7 +484,7 @@ function renderToday() {
   $('starWarn').innerHTML = act.length >= 5 && starN / act.length > 0.3 ? `<div class="note">⭐ ติดดาวไว้ ${starN} จาก ${act.length} งานที่ค้าง (${Math.round(100 * starN / act.length)}%) — ถ้าสำคัญทุกงาน ก็เหมือนไม่มีงานไหนสำคัญ 😄 ลองเอาดาวออกจากงานที่เตือนแค่ "พรุ่งนี้" ก็พอ</div>` : '';
   const soonTxt = d => { const n = dayDiff(d.due_date, today); return n === 1 ? 'พรุ่งนี้' : 'อีก ' + n + ' วัน'; };
   let h = '';
-  if (INBOX.length) h += `<div class="card" style="border-color:#c9b6e4"><h3 style="color:var(--inb)">📥 รอจัด (${INBOX.length})</h3>${INBOX.map(x => `<div class="row" style="cursor:default"><div class="t">${esc(x.d.text || '(รูป)')}${(x.d.imgs || []).length ? ' 🖼' + x.d.imgs.length : ''}<div class="meta">จดโดย ${esc(who(x.d.by))} · ${esc(thDate(x.d.at.slice(0, 10)))} ${esc(x.d.at.slice(11, 16))}</div></div><button class="btn ghost sm" onclick="sortInbox('${esc(x.name)}')">จัด</button></div>`).join('')}</div>`;
+  if (INBOX.length) h += `<div class="card" style="border-color:#c9b6e4"><h3 style="color:var(--inb)">📥 รอจัด (${INBOX.length})</h3>${INBOX.map(x => `<div class="row" style="cursor:default"><div class="t">${esc(x.d.text || '(รูป)')}${(x.d.imgs || []).length ? ' 🖼' + x.d.imgs.length : ''}<div class="meta">จดโดย ${esc(who(x.d.by))} · ${esc(thDate(x.d.at.slice(0, 10)))} ${esc(x.d.at.slice(11, 16))}</div></div><button class="btn ghost sm" data-click="sortInbox" data-a1="${esc(x.name)}">จัด</button></div>`).join('')}</div>`;
   h += card('📨 รอฉันรับ', 'var(--warn)', myPend.map(d => row(d, thDate(d.due_date))));
   h += card('📤 ที่ฉันมอบไป รอเขารับ', 'var(--warn)', theirPend.map(d => row(d, thDate(d.due_date))));
   h += card('⚠ เลยกำหนด', 'var(--late)', late.map(d => row(d, thDate(d.due_date), 'late')));
@@ -516,7 +527,7 @@ async function uploadImgs(prevId, prefix) {
   return names;
 }
 const imgCache = new Map();
-async function imgUrl(n) { if (imgCache.has(n)) return imgCache.get(n); const r = await dav('GET', 'img/' + n); if (!r.ok) throw httpErr(r, 'รูป'); const u = URL.createObjectURL(await r.blob()); imgCache.set(n, u); return u; }
+async function imgUrl(n) { if (!safeName(n)) throw new Error('ชื่อรูปไม่ถูกต้อง'); if (imgCache.has(n)) return imgCache.get(n); const r = await dav('GET', 'img/' + n); if (!r.ok) throw httpErr(r, 'รูป'); const u = URL.createObjectURL(new Blob([await r.arrayBuffer()], { type: 'image/jpeg' })); imgCache.set(n, u); return u; }
 function fillImgs(el) { el.querySelectorAll('img[data-n]').forEach(async im => { try { im.src = await imgUrl(im.dataset.n); im.onclick = () => { $('bigImg').src = im.src; $('big').classList.remove('hide'); }; } catch (e) { im.alt = 'โหลดรูปไม่ได้'; } }); }
 
 /* ---------- quick ---------- */
@@ -594,7 +605,7 @@ async function saveForm() {
       let firstText = $('fNote').value.trim();
       if (fromInbox) {
         firstText = ('จากกล่องรอจัด (' + who(fromInbox.d.by) + ' ' + fromInbox.d.at.slice(0, 16).replace('T', ' ') + '): ' + (fromInbox.d.text || '')) + (firstText ? '\n' + firstText : '');
-        imgs.unshift(...(fromInbox.d.imgs || []));
+        imgs.unshift(...safeImgs(fromInbox.d.imgs));
       }
       await writeLog(id, { text: 'สร้างงาน' + (toOther ? ' · มอบให้ ' + ow.filter(o => o !== me).map(who).join(', ') : '') + (ow.some(isNoweb) ? ' · ' + ow.filter(isNoweb).map(who).join(', ') + ' ไม่ได้เปิดเว็บ → ระบบรับแทน · ติดตามโดย ' + who(me) : '') + (firstText ? '\n' + firstText : ''), imgs });
       if (fromInbox) { const r = await dav('DELETE', 'inbox/' + fromInbox.name); if (r.ok || r.status === 404) INBOX = INBOX.filter(x => x !== fromInbox); fromInbox = null; }
@@ -618,11 +629,11 @@ async function openDetail(id) {
   const pOw = pendingOwners(d), acc0 = accOf(d), retMe = d.returned_by && owners(d).length === 1 && owners(d)[0] === S.user;
   const multi = owners(d).length > 1 ? `<div class="pend" style="margin-top:4px">${owners(d).map(o => esc(who(o)) + (o in acc0 ? ' ✓ รับแล้ว' : ' 📨 รอรับ')).join(' · ')}</div>` : '';
   $('dAcc').innerHTML = isPendingFor(d, S.user)
-    ? `<div class="accbar">📨 ${esc(who(d.assigned_by || d.created_by))} มอบงานนี้ให้คุณ${retMe ? ` (↩️ ${esc(who(d.returned_by))} ส่งกลับ${d.return_reason ? ': ' + esc(d.return_reason) : ''})` : ''}${multi}<button class="btn sm" style="margin-top:6px" onclick="acceptTask('${esc(d.id)}')">${retMe ? 'รับทำเอง' : 'รับงาน'}</button> ${retMe ? `<button class="btn ghost sm" style="margin-top:6px" onclick="reassign('${esc(d.id)}')">มอบคนอื่น</button>` : `<button class="btn ghost sm" style="margin-top:6px" onclick="rejectTask('${esc(d.id)}')">ไม่ใช่ของฉัน</button>`}</div>`
+    ? `<div class="accbar">📨 ${esc(who(d.assigned_by || d.created_by))} มอบงานนี้ให้คุณ${retMe ? ` (↩️ ${esc(who(d.returned_by))} ส่งกลับ${d.return_reason ? ': ' + esc(d.return_reason) : ''})` : ''}${multi}<button class="btn sm" style="margin-top:6px" data-click="acceptTask" data-a1="${esc(d.id)}">${retMe ? 'รับทำเอง' : 'รับงาน'}</button> ${retMe ? `<button class="btn ghost sm" style="margin-top:6px" data-click="reassign" data-a1="${esc(d.id)}">มอบคนอื่น</button>` : `<button class="btn ghost sm" style="margin-top:6px" data-click="rejectTask" data-a1="${esc(d.id)}">ไม่ใช่ของฉัน</button>`}</div>`
     : pOw.length ? `<div class="accbar">⏳ รอ ${esc(pOw.map(who).join(', '))} กดรับงาน (มอบโดย ${esc(who(d.assigned_by || d.created_by))} · ${esc(ago(d.assigned_at))})${multi}</div>`
     : multi ? `<div class="card" style="padding:8px 12px">${multi}</div>` : '';
   if (followOf(d) && active(d)) $('dAcc').innerHTML += `<div class="accbar" style="background:#eef4fb;border-color:#b9cfe8">📵 ${esc(nowebOf(d).map(who).join(', '))} ไม่ได้เปิดเว็บ · ระบบรับงานแทนแล้ว · <b>${esc(who(followOf(d)))}</b> เป็นผู้ติดตาม (โทร/ไลน์ตาม) · เสร็จแล้วใครในทีมก็กด "เสร็จ" ให้ได้</div>`;
-  $('dStatus').innerHTML = STATUS.map(([k, l]) => `<button class="${d.status === k ? 'on' : ''}" onclick="setStatus('${k}')">${l}</button>`).join('');
+  $('dStatus').innerHTML = STATUS.map(([k, l]) => `<button class="${d.status === k ? 'on' : ''}" data-click="setStatus" data-a1="${esc(k)}">${l}</button>`).join('');
   $('dWaitBox').classList.toggle('hide', d.status !== 'waiting');
   const wf = d.waiting_for || '', inTeam = CFG.PEOPLE.includes(wf);
   $('dWaitSel').innerHTML = '<option value="">— เลือก —</option>' + CFG.PEOPLE.filter(p => p !== S.user).map(p => `<option value="${esc(p)}">${esc(who(p))}</option>`).join('') + '<option value="__other">อื่น ๆ (นอกทีม)…</option>';
@@ -637,8 +648,8 @@ async function openDetail(id) {
   $('dTl').innerHTML = '<div class="pend">กำลังโหลด…</div>';
   try {
     const names = LOGS.filter(n => n.startsWith(id + '__')).reverse();
-    const logs = await pool(names, 6, async n => (await getJson('logs/' + n)).d);
-    $('dTl').innerHTML = logs.map(l => `<div class="ev"><div class="h">${esc(thDate(l.at.slice(0, 10)))} ${esc(l.at.slice(11, 16))} · ${esc(who(l.by))}</div>${l.status_change ? 'เปลี่ยนสถานะ ' + esc(STL[l.status_change.from] || '') + ' → <b>' + esc(STL[l.status_change.to] || '') + '</b>' + (l.text ? '\n' : '') : ''}${esc(l.text || '')}${(l.imgs || []).length ? '<div class="photos">' + l.imgs.map(n => `<img data-n="${esc(n)}" alt="…">`).join('') + '</div>' : ''}</div>`).join('') || '<div class="pend">ยังไม่มีบันทึก</div>';
+    const logs = (await pool(names, 6, async n => { try { return (await getJson('logs/' + n)).d; } catch (e) { if (e instanceof SyntaxError) return null; throw e; } })).filter(l => isObj(l) && typeof l.at === 'string');
+    $('dTl').innerHTML = logs.map(l => `<div class="ev"><div class="h">${esc(thDate(l.at.slice(0, 10)))} ${esc(l.at.slice(11, 16))} · ${esc(who(l.by))}</div>${l.status_change ? 'เปลี่ยนสถานะ ' + esc(STL[l.status_change.from] || '') + ' → <b>' + esc(STL[l.status_change.to] || '') + '</b>' + (l.text ? '\n' : '') : ''}${esc(l.text || '')}${safeImgs(l.imgs).length ? '<div class="photos">' + safeImgs(l.imgs).map(n => `<img data-n="${esc(n)}" alt="…">`).join('') + '</div>' : ''}</div>`).join('') || '<div class="pend">ยังไม่มีบันทึก</div>';
     fillImgs($('dTl'));
   } catch (e) { $('dTl').innerHTML = '<div class="err">โหลดไทม์ไลน์ไม่ได้: ' + esc(e.message) + '</div>'; }
 }
@@ -717,16 +728,16 @@ function maybeModal() {
     const others = owners(d).filter(o => o !== S.user);
     h += `<div class="it" data-pend="${esc(d.id)}"><div class="t1">📨 ${d.star ? '⭐ ' : ''}${esc(d.title)}</div>
       <div class="pend">มอบโดย ${esc(who(d.assigned_by || d.created_by))} · กำหนด ${esc(thDate(d.due_date, true))}${d.due_time ? ' ' + esc(d.due_time) : ''}${d.project ? ' · ' + esc(d.project) : ''}${others.length ? ' · ร่วมกับ ' + esc(others.map(who).join(', ')) : ''}</div>${ret}
-      ${retMe ? `<button class="btn sm" onclick="acceptTask('${esc(d.id)}')">รับทำเอง</button> <button class="btn ghost sm" onclick="reassign('${esc(d.id)}')">มอบคนอื่น</button>`
-        : `<button class="btn sm" onclick="acceptTask('${esc(d.id)}')">รับงาน</button> <button class="btn ghost sm" onclick="rejectTask('${esc(d.id)}')">ไม่ใช่ของฉัน</button>`}</div>`;
+      ${retMe ? `<button class="btn sm" data-click="acceptTask" data-a1="${esc(d.id)}">รับทำเอง</button> <button class="btn ghost sm" data-click="reassign" data-a1="${esc(d.id)}">มอบคนอื่น</button>`
+        : `<button class="btn sm" data-click="acceptTask" data-a1="${esc(d.id)}">รับงาน</button> <button class="btn ghost sm" data-click="rejectTask" data-a1="${esc(d.id)}">ไม่ใช่ของฉัน</button>`}</div>`;
   }
   if (nNotes) {
     h += `<div class="it"><div class="t1">💬 ความเคลื่อนไหวในงานของคุณ</div>${Object.entries(notes).map(([id, arr]) => { const t = T.get(id), d = t && t.d; const doneTxt = d && d.status === 'done' && d.done_by && d.done_by !== S.user ? ` <b style="color:var(--ok)">✓ ปิดแล้วโดย ${esc(who(d.done_by))}</b>` : ''; return `<div class="pend">• ${esc(d ? d.title : id)} — ${arr.length} รายการ โดย ${esc([...new Set(arr.map(a => who(a.by)))].join(', '))}${doneTxt}</div>`; }).join('')}
-      <button class="btn sm" style="margin-top:8px" onclick="ackNotes('${maxSt}')">รับทราบ</button></div>`;
+      <button class="btn sm" style="margin-top:8px" data-click="ackNotes" data-a1="${esc(maxSt)}">รับทราบ</button></div>`;
   }
   if (late.length) {
     h += `<div class="it"><div class="t1" style="color:var(--late)">⚠ งานของคุณที่เลยกำหนด (${late.length})</div>${late.map(d => `<div class="pend">• ${esc(d.title)} — กำหนด ${esc(thDate(d.due_date))}</div>`).join('')}
-      <button class="btn sm" style="margin-top:8px" onclick="ackLate()">รับทราบ</button></div>`;
+      <button class="btn sm" style="margin-top:8px" data-click="ackLate">รับทราบ</button></div>`;
   }
   $('mBody').innerHTML = h;
   $('modal').classList.remove('hide');
@@ -777,12 +788,56 @@ function renderWho() {
   }).sort((a, b) => b.late - a.late || b.pendOld - a.pendOld || b.n - a.n);
   $('whoBody').innerHTML = rows.map(r => {
     const tot = Math.max(r.n, 1), oldSeen = !r.seen || dayDiff(today, r.seen.slice(0, 10)) >= 2;
-    return `<div class="card who-row" data-p="${esc(r.p)}" onclick="fOwnerFilter='${esc(r.p)}';go('today')">
+    return `<div class="card who-row" data-p="${esc(r.p)}" data-click="setFilterGo" data-a1="${esc(r.p)}">
       <h3>${esc(who(r.p))} <span class="pend" style="font-weight:400">· ค้าง ${r.n}${r.late ? ` · <span style="color:var(--late)">เลยกำหนด ${r.late}</span>` : ''}${r.pend ? ` · รอรับ ${r.pend}` : ''}${r.pendOld ? ` · <span style="color:var(--warn)">รอรับเกิน 1 วัน ${r.pendOld}</span>` : ''}</span></h3>
       <div style="height:10px;border-radius:5px;background:#eee;overflow:hidden;display:flex;margin:6px 0"><i style="width:${100 * r.late / tot}%;background:var(--late)"></i><i style="width:${100 * r.wait / tot}%;background:var(--warn)"></i><i style="width:${100 * r.pend / tot}%;background:#e6b85c"></i><i style="width:${100 * Math.max(0, r.n - r.late - r.wait - r.pend) / tot}%;background:var(--ck)"></i></div>
       <div class="pend" style="${oldSeen ? 'color:var(--late)' : ''}">เปิดเว็บล่าสุด: ${esc(ago(r.seen))}</div></div>`;
   }).join('') + '<p class="pend">■ แดง เลยกำหนด ■ ส้ม รอคนอื่น ■ เหลือง รอรับ ■ น้ำเงิน ปกติ</p>';
 }
+
+/* ---------- event delegation (no inline handlers: values never become JS code) ---------- */
+const HELPERS_EV = ['enterUnlock'];
+const ACT = { acceptTask,
+  ackLate,
+  ackNotes,
+  addNote,
+  back,
+  clickId(id) { $(id).click(); },
+  doLogin,
+  doLogout,
+  doUnlock,
+  enterUnlock(ev) { if (ev.key === 'Enter') doUnlock(); },
+  forgetProfile,
+  formEditCur() { openForm(cur); },
+  go,
+  hideSelf() { this.classList.add('hide'); },
+  loginView,
+  openDetail,
+  openForm,
+  passHint,
+  pickImgsEl(p) { pickImgs(this, p); },
+  pickProfile,
+  reassign,
+  rejectTask,
+  reload,
+  remToggle() { $('remBox').classList.toggle('hide', !this.checked); },
+  saveForm,
+  saveQuick,
+  setFilter(k) { fOwnerFilter = k; render(); },
+  setFilterGo(k) { fOwnerFilter = k; go('today'); },
+  setStatus,
+  showNew,
+  showProfiles,
+  sortInbox,
+  toggleDone };
+['click', 'change', 'input', 'keydown'].forEach(type => document.addEventListener(type, ev => {
+  const el = ev.target instanceof Element ? ev.target.closest('[data-' + type + ']') : null; if (!el) return;
+  const f = Object.prototype.hasOwnProperty.call(ACT, el.dataset[type]) ? ACT[el.dataset[type]] : null; if (!f) return;
+  if (el.dataset.pd) ev.preventDefault();
+  const args = []; for (let i = 1; el.dataset['a' + i] !== undefined; i++) args.push(el.dataset['a' + i]);
+  if (!args.length && f.length && HELPERS_EV.includes(el.dataset[type])) args.push(ev);
+  f.apply(el, args);
+}));
 
 /* ---------- boot ---------- */
 if (Object.keys(profiles()).length) showProfiles(); else showNew();
