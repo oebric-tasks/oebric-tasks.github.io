@@ -1,0 +1,722 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src https://oc2.dida.psu.ac.th; img-src blob: data:; base-uri 'none'; form-action 'none'">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="งาน OEBRIC">
+<title>งาน OEBRIC</title>
+<style>
+:root{--bg:#f6f5f2;--card:#fff;--ink:#1f2328;--mute:#6b7280;--line:#e5e3dd;--ck:#2f6db5;--ck-bg:#e8f0fa;--mi:#b5562f;--mi-bg:#faece6;--late:#c0392b;--ok:#2e7d32;--warn:#a56b00;--inb:#6b3fa0}
+*{box-sizing:border-box}
+body{margin:0;font-family:-apple-system,"Sukhumvit Set","Thonburi","Noto Sans Thai",sans-serif;background:var(--bg);color:var(--ink);font-size:17px;line-height:1.5}
+.hide{display:none!important}
+header{display:flex;gap:6px;flex-wrap:wrap;align-items:center;padding:10px 14px;background:#fff;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5}
+header button{border:1px solid var(--line);background:#fff;border-radius:999px;padding:6px 13px;font-size:15px;cursor:pointer;color:var(--ink)}
+header button.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+header .me{margin-left:auto;font-size:13px;color:var(--mute)}
+main{max-width:880px;margin:0 auto;padding:18px 14px 80px}
+h2{font-size:22px;margin:4px 0} .sub{color:var(--mute);font-size:14px;margin:0 0 14px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 16px;margin-bottom:12px}
+.card h3{font-size:16px;margin:0 0 4px}
+.note{background:#fffbe8;border:1px dashed #d9c46a;border-radius:10px;padding:10px 14px;font-size:14px;margin:12px 0}
+.err{color:var(--late);font-size:15px;margin-top:8px;white-space:pre-line}
+.tag{display:inline-block;font-size:13px;border-radius:6px;padding:1px 8px;margin-right:4px;white-space:nowrap}
+.w-chanon{background:var(--ck-bg);color:var(--ck)} .w-apinya{background:var(--mi-bg);color:var(--mi)}
+.proj{background:#eef0f3;color:#374151}
+.st{font-size:13px;border-radius:6px;padding:1px 8px;border:1px solid;white-space:nowrap}
+.st-todo{color:#555;border-color:#bbb}.st-doing{color:var(--ck);border-color:var(--ck)}.st-waiting{color:var(--warn);border-color:var(--warn)}.st-done{color:var(--ok);border-color:var(--ok)}.st-cancelled{color:#999;border-color:#ccc}
+.row{display:flex;gap:10px;align-items:flex-start;padding:9px 0;border-top:1px solid var(--line);cursor:pointer}
+.row:first-of-type{border-top:0}
+.when{min-width:66px;font-weight:600;font-variant-numeric:tabular-nums;font-size:15px}
+.late{color:var(--late)}
+.t{flex:1;min-width:0}.t .meta{font-size:13px;color:var(--mute);margin-top:2px}
+.chk{width:24px;height:24px;border:2px solid #9ca3af;border-radius:6px;margin-top:2px;flex:none;background:#fff;cursor:pointer}
+.chk.done{background:var(--ok);border-color:var(--ok)}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px;margin-bottom:12px}
+.kpi{background:#fff;border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+.kpi b{font-size:26px;display:block}.kpi span{font-size:13px;color:var(--mute)}
+.filter{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.filter button{border:1px solid var(--line);background:#fff;border-radius:999px;padding:5px 14px;font-size:15px;cursor:pointer}
+.filter button.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+label{display:block;font-weight:600;margin:12px 0 5px;font-size:15px}
+label .h{font-weight:400;color:var(--mute)}
+input,select,textarea{width:100%;font-size:17px;padding:10px 12px;border:1px solid #cfccc4;border-radius:10px;background:#fff;font-family:inherit;color:var(--ink)}
+input[type=checkbox]{width:auto;transform:scale(1.3);margin-right:8px}
+.seg{display:flex;gap:8px;flex-wrap:wrap}
+.seg button{flex:1;min-width:90px;border:2px solid var(--line);border-radius:12px;padding:9px 10px;background:#fff;font-size:16px;cursor:pointer;font-family:inherit}
+.seg button.on{border-color:var(--ink);font-weight:700}
+.btn{display:inline-block;background:var(--ink);color:#fff;border:0;border-radius:10px;padding:11px 20px;font-size:17px;margin-top:14px;cursor:pointer;font-family:inherit}
+.btn.ghost{background:#fff;color:var(--ink);border:1px solid var(--ink)}
+.btn.sm{padding:6px 12px;font-size:14px;margin-top:0}
+.btn:disabled{opacity:.5}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.tl{border-left:3px solid var(--line);padding-left:14px;margin:10px 0 0 6px}
+.tl .ev{margin-bottom:14px;white-space:pre-wrap}.tl .ev .h{font-size:13px;color:var(--mute);white-space:normal}
+.photos{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
+.photos img{width:110px;height:82px;object-fit:cover;border-radius:8px;border:1px solid var(--line);cursor:zoom-in}
+.pend{font-size:13px;color:var(--mute)}
+table{width:100%;border-collapse:collapse;font-size:15px}td{border-bottom:1px solid var(--line);padding:7px 5px;vertical-align:top}
+.lock{max-width:440px;margin:24px auto}
+.toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:var(--ink);color:#fff;padding:10px 18px;border-radius:999px;font-size:15px;z-index:20}
+.qbox{font-size:19px;min-height:120px}
+.big{position:fixed;inset:0;background:rgba(0,0,0,.85);display:flex;align-items:center;justify-content:center;z-index:30}
+.big img{max-width:96vw;max-height:92vh}
+.star{color:#d4a017}
+.w-other{background:#eef0f3;color:#374151}
+.pendtag{display:inline-block;font-size:12px;border-radius:6px;padding:0 7px;background:#fff1d6;color:#8a5a00;border:1px solid #e6b85c;margin-right:4px}
+#modal{position:fixed;inset:0;background:rgba(31,35,40,.55);z-index:40;overflow:auto}
+#modal .box{background:#fff;max-width:560px;width:94%;margin:28px auto;border-radius:14px;padding:16px 18px}
+#modal .it{border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin:10px 0}
+#modal .it .t1{font-weight:700}
+.accbar{background:#fff8ec;border:1px solid #e6b85c;border-radius:10px;padding:10px 12px;margin-bottom:12px}
+.who-row{cursor:pointer}
+@media(max-width:560px){.two{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<!-- ===== LOGIN ===== -->
+<div id="vLogin" class="lock">
+  <h2>งาน OEBRIC</h2>
+  <p class="sub">เชื่อม ownCloud (oc2) ตรง · ไม่ผ่านตัวกลาง</p>
+  <div id="lgProfiles" class="card hide"><h3>เข้าด้วยบัญชีที่จำไว้</h3><div id="profList"></div><button class="btn ghost sm" style="margin-top:10px" onclick="showNew()">ใช้บัญชีอื่น</button></div>
+  <div id="lgUnlock" class="card hide">
+    <h3>ปลดล็อก · <span id="unName"></span></h3>
+    <label>รหัสผ่านปลดล็อก</label><input id="unPass" type="password" autocomplete="current-password" onkeydown="if(event.key==='Enter')doUnlock()">
+    <button class="btn" id="btnUnlock" onclick="doUnlock()">เข้าระบบ</button>
+    <button class="btn ghost" onclick="loginView('lgProfiles')">ย้อนกลับ</button>
+    <div style="margin-top:10px"><a href="#" onclick="forgetProfile();return false" style="font-size:14px;color:var(--mute)">ลืมบัญชีนี้จากเครื่องนี้</a></div>
+  </div>
+  <div id="lgNew" class="card hide">
+    <h3>เข้าใช้ครั้งแรกบนเครื่องนี้</h3>
+    <label>ชื่อผู้ใช้ ownCloud (oc2)</label><input id="inUser" autocomplete="username" autocapitalize="off">
+    <label>App password ของ ownCloud</label><input id="inApp" type="password" autocomplete="off">
+    <label style="font-weight:400;margin-top:14px"><input type="checkbox" id="inRemember" checked onchange="$('remBox').classList.toggle('hide',!this.checked)">จำการล็อกอินบนเครื่องนี้ (เครื่องส่วนตัว)</label>
+    <div id="remBox">
+      <label>ตั้งรหัสผ่านปลดล็อก <span class="h">(อย่างน้อย 12 ตัวอักษร)</span></label><input id="inPass1" type="password" autocomplete="new-password" oninput="passHint()">
+      <label>พิมพ์อีกครั้ง</label><input id="inPass2" type="password" autocomplete="new-password" oninput="passHint()">
+      <div id="passHint" class="pend"></div>
+    </div>
+    <div class="pend" style="margin-top:6px">iPad ส่วนกลาง → ติ๊กออก · ปิดแท็บแล้วต้องใส่ App password ใหม่</div>
+    <label>โฟลเดอร์งานบน oc2 <span class="h">(เว้นว่าง = หาเอง)</span></label><input id="inDir" placeholder="OEBRIC_tasks" autocapitalize="off">
+    <button class="btn" id="btnLogin" onclick="doLogin()">เข้าระบบ</button>
+    <button class="btn ghost hide" id="btnBack" onclick="showProfiles()">ย้อนกลับ</button>
+  </div>
+  <div id="lerr" class="err"></div>
+  <div class="note">• App password ถูกเข้ารหัสด้วยรหัสผ่านปลดล็อก (PBKDF2 600,000 รอบ + AES-GCM) ก่อนเก็บในเครื่อง<br>• ไม่แตะ 15 นาที → ล็อกเอง · รหัสผิด 5 ครั้ง → ลบข้อมูลล็อกอินของเครื่องนั้น<br>• เครื่องหาย → เพิกถอน App password ใน oc2 ตัวเดียว</div>
+</div>
+
+<!-- ===== APP ===== -->
+<div id="vApp" class="hide">
+<header>
+  <button data-v="quick" onclick="go('quick')">⚡ จดไว</button>
+  <button data-v="today" onclick="go('today')">วันนี้</button>
+  <button data-v="who" onclick="go('who')">ใครค้างอะไร</button>
+  <button data-v="proj" onclick="go('proj')">ตามโปรเจกต์</button>
+  <button onclick="openForm()">＋ เพิ่มงาน</button>
+  <button onclick="reload()" title="โหลดใหม่">⟳</button>
+  <span class="me"><span id="meName"></span> · <a href="#" onclick="doLogout();return false">ออก</a></span>
+</header>
+<main>
+  <section id="vQuick" class="hide">
+    <h2>⚡ จดไว</h2><p class="sub">พิมพ์อะไรก็ได้ ไปลงกล่อง "รอจัด" · ค่อยจัดทีหลัง</p>
+    <div class="card">
+      <textarea id="qText" class="qbox" placeholder="พิมพ์อะไรก็ได้ เดี๋ยวค่อยจัด…"></textarea>
+      <input type="file" id="qImg" accept="image/*" multiple class="hide" onchange="pickImgs(this,'qPrev')">
+      <div id="qPrev" class="photos"></div>
+      <div style="display:flex;gap:8px;margin-top:10px"><button class="btn ghost sm" onclick="$('qImg').click()">🖼 รูป</button><button class="btn sm" style="flex:1" id="btnQ" onclick="saveQuick()">ส่ง</button></div>
+      <div id="qMsg" class="pend" style="margin-top:8px"></div>
+    </div>
+  </section>
+
+  <section id="vToday" class="hide">
+    <h2 id="todayTitle"></h2><p class="sub">ทุกคนในทีมเห็นรายการชุดเดียวกัน · ปุ่มกรองใช้แค่ช่วยดู</p>
+    <div class="filter" id="fTod"></div>
+    <div class="grid" id="kpi"></div>
+    <div id="starWarn"></div>
+    <div id="todayBody"></div>
+  </section>
+
+  <section id="vWho" class="hide">
+    <h2>ใครค้างอะไร</h2><p class="sub">เรียงตามงานเลยกำหนดมากสุด · กดชื่อเพื่อดูงานของคนนั้น</p>
+    <div id="whoBody"></div>
+  </section>
+
+  <section id="vProj" class="hide">
+    <h2>ตามโปรเจกต์</h2><p class="sub">งานที่ยังไม่เสร็จ · เรียงตามวันกำหนด</p>
+    <div class="filter" id="fProj"></div>
+    <div id="projBody"></div>
+  </section>
+
+  <section id="vForm" class="hide">
+    <h2 id="formTitle">เพิ่มงาน</h2>
+    <div class="card">
+      <label style="margin-top:0">งานอะไร *</label><input id="fTitle">
+      <label>ใครรับผิดชอบ * <span class="h">(มอบให้คนอื่น → เขาต้องกด "รับงาน")</span></label>
+      <div class="seg" id="fOwner"></div>
+      <div class="two">
+        <div><label>โปรเจกต์</label><input id="fProjIn" list="projList" placeholder="เลือกหรือพิมพ์ใหม่"><datalist id="projList"></datalist></div>
+        <div><label>มอบต่อให้คนนอก <span class="h">(ถ้ามี)</span></label><input id="fDelegate" placeholder="เช่น เพชร · อ.อ้น"></div>
+      </div>
+      <div class="two">
+        <div><label>วันกำหนด *</label><input id="fDate" type="date"></div>
+        <div><label>เวลา <span class="h">(ถ้ามี)</span></label><input id="fTime" type="time"></div>
+      </div>
+      <label style="font-weight:400;margin-top:14px"><input type="checkbox" id="fStar"><span class="star">⭐</span> สำคัญ — เตือนล่วงหน้า 3 วัน <span class="h">(งานทั่วไปเตือน "พรุ่งนี้" กับ "วันนี้")</span></label>
+      <label>ลิงก์</label><input id="fLink" placeholder="URL หรือ path ไฟล์">
+      <div id="fNoteWrap"><label>บันทึกเริ่มต้น</label><textarea id="fNote" rows="2"></textarea>
+        <input type="file" id="fImg" accept="image/*" multiple class="hide" onchange="pickImgs(this,'fPrev')">
+        <button class="btn ghost sm" style="margin-top:8px" onclick="$('fImg').click()">🖼 แนบรูป</button><div id="fPrev" class="photos"></div></div>
+      <button class="btn" id="btnSave" onclick="saveForm()">บันทึก</button>
+      <button class="btn ghost" onclick="back()">ยกเลิก</button>
+      <div id="fErr" class="err"></div>
+    </div>
+  </section>
+
+  <section id="vDetail" class="hide">
+    <h2 id="dTitle"></h2><p class="sub" id="dSub"></p>
+    <div id="dAcc"></div>
+    <div class="card">
+      <label style="margin-top:0">สถานะ</label>
+      <div class="seg" id="dStatus"></div>
+      <div id="dWaitBox" class="hide"><label>รอใคร</label><input id="dWait" placeholder="เช่น อ.อ้น"></div>
+      <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap"><button class="btn ghost sm" onclick="openForm(cur)">✏️ แก้รายละเอียด</button><button class="btn ghost sm" onclick="setStatus('cancelled')">ยกเลิกงาน</button></div>
+      <div id="dLink" style="margin-top:8px;font-size:14px;word-break:break-all"></div>
+    </div>
+    <div class="card">
+      <h3>ไทม์ไลน์ <span class="pend">(เพิ่มอย่างเดียว ไม่ทับของเดิม)</span></h3>
+      <div id="dTl" class="tl"></div>
+      <label>เพิ่มบันทึก</label><textarea id="dNote" rows="2"></textarea>
+      <input type="file" id="dImg" accept="image/*" multiple class="hide" onchange="pickImgs(this,'dPrev')">
+      <div id="dPrev" class="photos"></div>
+      <button class="btn" id="btnNote" onclick="addNote()">บันทึก</button> <button class="btn ghost" onclick="$('dImg').click()">🖼 แนบรูป</button>
+    </div>
+  </section>
+</main>
+</div>
+<div id="modal" class="hide"><div class="box">
+  <h2 style="margin-top:0">📬 มีอะไรใหม่ตั้งแต่ครั้งก่อน</h2>
+  <p class="sub">จัดการให้ครบทุกข้อก่อนเข้าใช้งาน</p>
+  <div id="mBody"></div>
+</div></div>
+<div id="toast" class="toast hide"></div>
+<div id="big" class="big hide" onclick="this.classList.add('hide')"><img id="bigImg" alt=""></div>
+
+<script>
+'use strict';
+const CFG = {
+  OC: 'https://oc2.dida.psu.ac.th',
+  DIRS: ['OEBRIC_tasks', 'Shared/OEBRIC_tasks'],
+  IDLE_MIN: 15, MAX_FAIL: 5, PBKDF2: 600000, IMG_MAX: 1600,
+  NAMES: { chanon: 'พี่', apinya: 'มายด์', 'phachara.suk': 'พี่เพชร', nutwhatcha: 'Nutt', apysobhon: 'Stamp', maseetoh: 'เต๊าะ' },
+  PEOPLE: ['chanon', 'apinya', 'phachara.suk', 'nutwhatcha', 'apysobhon', 'maseetoh'],
+  LEADS: ['chanon', 'apinya', 'phachara.suk'],
+  POLL_MIN: 3
+};
+const STORE_KEY = 'oebric_tasks_profiles_v1';
+const STATUS = [['todo', 'ยังไม่เริ่ม'], ['doing', 'กำลังทำ'], ['waiting', 'รอคนอื่น'], ['done', 'เสร็จ']];
+const STL = Object.fromEntries([...STATUS, ['cancelled', 'ยกเลิก']]);
+let S = { user: '', pass: '', dir: '' };
+let T = new Map();   // id -> {d, etag}
+let LOGS = [];       // file names in logs/
+let INBOX = [];      // [{name, d}]
+let SEEN = {};       // user -> {last_open, notes_ack, overdue_ack}
+let NAMES = Object.assign({}, CFG.NAMES);
+let view = 'today', prevView = 'today', cur = null, editing = null, fromInbox = null, owner = '', fOwnerFilter = 'all', pollT = null;
+let pendImgs = { qPrev: [], fPrev: [], dPrev: [] };
+let pendingProfile = '', idleT = null;
+const $ = id => document.getElementById(id);
+
+/* ---------- utils ---------- */
+function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
+function b64(bytes) { let s = ''; bytes.forEach(b => s += String.fromCharCode(b)); return btoa(s); }
+function unb64(s) { return Uint8Array.from(atob(s), c => c.charCodeAt(0)); }
+function basic(u, p) { return 'Basic ' + b64(new TextEncoder().encode(u + ':' + p)); }
+function bkk(d) { // Asia/Bangkok wall clock
+  const p = Object.fromEntries(new Intl.DateTimeFormat('en-GB', { timeZone: 'Asia/Bangkok', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hourCycle: 'h23' }).formatToParts(d || new Date()).map(x => [x.type, x.value]));
+  return { date: `${p.year}-${p.month}-${p.day}`, time: `${p.hour}:${p.minute}`, stamp: `${p.year}${p.month}${p.day}-${p.hour}${p.minute}${p.second}`, iso: `${p.year}-${p.month}-${p.day}T${p.hour}:${p.minute}:${p.second}+07:00` };
+}
+function rand4() { return Array.from(crypto.getRandomValues(new Uint8Array(2))).map(b => b.toString(16).padStart(2, '0')).join(''); }
+function dayDiff(a, b) { return Math.round((Date.parse(a + 'T00:00:00Z') - Date.parse(b + 'T00:00:00Z')) / 86400000); }
+const TH_M = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'], TH_D = ['อา.', 'จ.', 'อ.', 'พ.', 'พฤ.', 'ศ.', 'ส.'];
+function thDate(s, withDay) { if (!s) return ''; const [y, m, d] = s.split('-').map(Number); const wd = new Date(Date.UTC(y, m - 1, d)).getUTCDay(); return (withDay ? TH_D[wd] + ' ' : '') + d + ' ' + TH_M[m - 1] + (withDay ? ' ' + (y + 543) : ''); }
+function toast(m) { const t = $('toast'); t.textContent = m; t.classList.remove('hide'); clearTimeout(toast.t); toast.t = setTimeout(() => t.classList.add('hide'), 2600); }
+function stripW(e) { return e ? e.replace(/^W\//, '') : e; }
+function who(u) { return NAMES[u] || u; }
+function owners(d) { return Array.isArray(d.owner) && d.owner.length ? d.owner : [d.created_by]; }
+function ownerOf(d) { return owners(d)[0]; }
+function isPending(d) { return d.accepted === false && d.status !== 'done' && d.status !== 'cancelled'; }
+function ago(iso) { if (!iso) return 'ยังไม่เคยเปิด'; const n = dayDiff(bkk().date, iso.slice(0, 10)); return n <= 0 ? 'วันนี้ ' + iso.slice(11, 16) : n === 1 ? 'เมื่อวาน ' + iso.slice(11, 16) : n + ' วันก่อน'; }
+function logStamp(n) { const m = /__(\d{8}-\d{6})-(.+)-[0-9a-f]{4}\.json$/.exec(n); return m ? { stamp: m[1], by: m[2] } : null; }
+function stampToIso(st) { return st.slice(0, 4) + '-' + st.slice(4, 6) + '-' + st.slice(6, 8) + 'T' + st.slice(9, 11) + ':' + st.slice(11, 13) + ':' + st.slice(13, 15) + '+07:00'; }
+
+/* ---------- WebDAV ---------- */
+function davUrl(p) { return CFG.OC + '/remote.php/dav/files/' + encodeURIComponent(S.user) + '/' + (S.dir + '/' + p).split('/').filter(Boolean).map(encodeURIComponent).join('/'); }
+async function dav(method, p, opt) {
+  opt = opt || {};
+  const h = Object.assign({ Authorization: basic(S.user, S.pass) }, opt.headers || {});
+  const r = await fetch(davUrl(p), { method, headers: h, body: opt.body, cache: 'no-store', credentials: 'omit' });
+  return r;
+}
+async function propfind(folder) {
+  const r = await dav('PROPFIND', folder + '/', { headers: { Depth: '1', 'Content-Type': 'application/xml' }, body: '<?xml version="1.0"?><d:propfind xmlns:d="DAV:"><d:prop><d:getetag/></d:prop></d:propfind>' });
+  if (r.status === 404) return [];
+  if (r.status !== 207) throw httpErr(r, 'อ่านโฟลเดอร์ ' + folder);
+  const x = new DOMParser().parseFromString(await r.text(), 'application/xml');
+  const out = [];
+  for (const resp of x.getElementsByTagNameNS('DAV:', 'response')) {
+    const href = decodeURIComponent(resp.getElementsByTagNameNS('DAV:', 'href')[0].textContent);
+    if (href.endsWith('/')) continue;
+    const et = resp.getElementsByTagNameNS('DAV:', 'getetag')[0];
+    out.push({ name: href.split('/').pop(), etag: stripW(et ? et.textContent : '') });
+  }
+  return out;
+}
+function httpErr(r, what) { const e = new Error(what + ' ไม่สำเร็จ (HTTP ' + r.status + ')'); e.status = r.status; return e; }
+async function getJson(p) { const r = await dav('GET', p); if (!r.ok) throw httpErr(r, 'อ่าน ' + p); return { d: JSON.parse(await r.text()), etag: stripW(r.headers.get('ETag') || r.headers.get('OC-ETag')) }; }
+async function putNew(p, body, type) { // never overwrites
+  const r = await dav('PUT', p, { body, headers: { 'Content-Type': type || 'application/json', 'If-None-Match': '*' } });
+  if (r.status !== 201 && r.status !== 204) throw httpErr(r, 'บันทึก ' + p);
+  return stripW(r.headers.get('ETag'));
+}
+async function putTask(d, etag) {
+  const h = { 'Content-Type': 'application/json' };
+  if (etag) h['If-Match'] = etag; else h['If-None-Match'] = '*';
+  const r = await dav('PUT', 'tasks/' + d.id + '.json', { body: JSON.stringify(d, null, 2), headers: h });
+  if (r.status === 412) { const e = new Error('มีคนแก้งานนี้ก่อนหน้าคุณไม่กี่วินาที — กดโหลดใหม่แล้วลองอีกครั้ง'); e.status = 412; throw e; }
+  if (r.status !== 201 && r.status !== 204) throw httpErr(r, 'บันทึกงาน');
+  const ne = stripW(r.headers.get('ETag'));
+  T.set(d.id, { d, etag: ne || (await getJson('tasks/' + d.id + '.json')).etag });
+}
+async function pool(items, n, fn) { const out = []; let i = 0; await Promise.all(Array.from({ length: n }, async () => { while (i < items.length) { const k = i++; out[k] = await fn(items[k]); } })); return out; }
+
+/* ---------- crypto / profiles ---------- */
+function profiles() { try { return JSON.parse(localStorage.getItem(STORE_KEY) || '{}'); } catch (e) { return {}; } }
+function saveProfiles(p) { try { localStorage.setItem(STORE_KEY, JSON.stringify(p)); } catch (e) { } }
+async function passKey(pass, salt) {
+  const base = await crypto.subtle.importKey('raw', new TextEncoder().encode(pass), 'PBKDF2', false, ['deriveKey']);
+  return crypto.subtle.deriveKey({ name: 'PBKDF2', salt, iterations: CFG.PBKDF2, hash: 'SHA-256' }, base, { name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']);
+}
+function passProblem(p) {
+  if (p.length < 12) return 'ต้องยาวอย่างน้อย 12 ตัวอักษร (ตอนนี้ ' + p.length + ')';
+  if (!/[0-9]/.test(p) || !/[^0-9]/.test(p)) return 'ต้องมีทั้งตัวเลขและตัวอักษร';
+  if (/^(.)\1+$/.test(p)) return 'ห้ามเป็นตัวซ้ำทั้งหมด';
+  return '';
+}
+function passHint() { const a = $('inPass1').value, b = $('inPass2').value, pr = passProblem(a); $('passHint').innerHTML = !a ? '' : pr ? '✗ ' + pr : (b && a !== b ? '✗ สองช่องไม่ตรงกัน' : '<span style="color:var(--ok)">✓ ใช้ได้</span>'); }
+
+/* ---------- login ---------- */
+async function connect(user, pass, dirManual) {
+  S = { user, pass, dir: '' };
+  const tries = dirManual ? [dirManual] : CFG.DIRS;
+  let lastStatus = 0;
+  for (const d of tries) {
+    S.dir = d.replace(/^\/+|\/+$/g, '');
+    let r;
+    try { r = await dav('PROPFIND', 'tasks/', { headers: { Depth: '0' } }); }
+    catch (e) { const ex = new Error('net'); ex.kind = 'net'; throw ex; }
+    if (r.status === 207) return;
+    if (r.status === 401) { const ex = new Error('401'); ex.kind = '401'; throw ex; }
+    lastStatus = r.status;
+  }
+  const ex = new Error('nodir'); ex.kind = 'nodir'; ex.status = lastStatus; throw ex;
+}
+function loginMsg(e, seen) {
+  if (e.kind === '401') return 'ชื่อผู้ใช้หรือ App password ไม่ถูกต้อง' + (seen ? '\n(ถ้าเคยเข้าได้ อาจถูกเพิกถอน App password แล้ว → สร้างใหม่ใน oc2)' : '');
+  if (e.kind === 'net') return 'ติดต่อ oc2 ไม่ได้ — เป็นได้ 2 อย่าง:\n1) เน็ตหลุด / ไม่ได้อยู่ในเครือข่ายที่เข้า oc2 ได้\n2) oc2 ปฏิเสธ: ยังไม่ได้เพิ่มเว็บนี้ใน CORS หรือรหัสผิด (browser แยกสองอย่างนี้ไม่ได้)';
+  if (e.kind === 'nodir') return 'เข้า oc2 ได้ แต่หาโฟลเดอร์งานไม่เจอ (ลองแล้ว: ' + (e.tried || CFG.DIRS).join(' · ') + ')\nพิมพ์ path โฟลเดอร์เองในช่อง "โฟลเดอร์งานบน oc2"';
+  return String(e.message || e);
+}
+async function doLogin() {
+  const user = $('inUser').value.trim().toLowerCase(), app = $('inApp').value, rem = $('inRemember').checked, dirM = $('inDir').value.trim();
+  $('lerr').textContent = '';
+  if (!user || !app) { $('lerr').textContent = 'กรอกชื่อผู้ใช้และ App password'; return; }
+  let pass1 = '';
+  if (rem) { pass1 = $('inPass1').value; const pr = passProblem(pass1); if (pr) { $('lerr').textContent = 'รหัสผ่านปลดล็อก: ' + pr; return; } if (pass1 !== $('inPass2').value) { $('lerr').textContent = 'รหัสผ่านปลดล็อกสองช่องไม่ตรงกัน'; return; } }
+  $('btnLogin').disabled = true; $('btnLogin').textContent = 'กำลังเชื่อม…';
+  try {
+    await connect(user, app, dirM);
+    if (rem) {
+      const salt = crypto.getRandomValues(new Uint8Array(16)), iv = crypto.getRandomValues(new Uint8Array(12));
+      const ct = new Uint8Array(await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, await passKey(pass1, salt), new TextEncoder().encode(app)));
+      const p = profiles(); p[user] = { salt: b64(salt), iv: b64(iv), ct: b64(ct), fails: 0, dirManual: dirM || '' }; saveProfiles(p);
+    }
+    $('inApp').value = $('inPass1').value = $('inPass2').value = '';
+    await start();
+  } catch (e) { $('lerr').textContent = loginMsg(e, false); }
+  $('btnLogin').disabled = false; $('btnLogin').textContent = 'เข้าระบบ';
+}
+async function doUnlock() {
+  const k = pendingProfile, p = profiles(), pr = p[k]; if (!pr) return showNew();
+  $('lerr').textContent = ''; $('btnUnlock').disabled = true;
+  let app;
+  try { app = new TextDecoder().decode(await crypto.subtle.decrypt({ name: 'AES-GCM', iv: unb64(pr.iv) }, await passKey($('unPass').value, unb64(pr.salt)), unb64(pr.ct))); }
+  catch (e) {
+    pr.fails = (pr.fails || 0) + 1;
+    if (pr.fails >= CFG.MAX_FAIL) { delete p[k]; saveProfiles(p); $('lerr').textContent = 'รหัสผิด ' + CFG.MAX_FAIL + ' ครั้ง — ลบข้อมูลล็อกอินของเครื่องนี้แล้ว ต้องใส่ App password ใหม่'; $('btnUnlock').disabled = false; showNew(true); return; }
+    saveProfiles(p); $('lerr').textContent = 'รหัสผ่านไม่ถูกต้อง (เหลือ ' + (CFG.MAX_FAIL - pr.fails) + ' ครั้ง)'; $('btnUnlock').disabled = false; return;
+  }
+  pr.fails = 0; saveProfiles(p); $('unPass').value = '';
+  try { await connect(k, app, pr.dirManual); await start(); }
+  catch (e) { $('lerr').textContent = loginMsg(e, true); }
+  $('btnUnlock').disabled = false;
+}
+function forgetProfile() { if (!confirm('ลบบัญชีนี้ออกจากเครื่องนี้?')) return; const p = profiles(); delete p[pendingProfile]; saveProfiles(p); showProfiles(); }
+function loginView(w) { ['lgProfiles', 'lgUnlock', 'lgNew'].forEach(x => $(x).classList.toggle('hide', x !== w)); }
+function showProfiles() { const ks = Object.keys(profiles()); if (!ks.length) return showNew(); $('profList').innerHTML = ks.map(k => `<button class="btn ghost" style="margin:4px 6px 0 0" onclick="pickProfile('${esc(k)}')">${esc(who(k))} (${esc(k)})</button>`).join(''); loginView('lgProfiles'); }
+function pickProfile(k) { pendingProfile = k; $('unName').textContent = who(k); $('lerr').textContent = ''; loginView('lgUnlock'); setTimeout(() => $('unPass').focus(), 50); }
+function showNew(keep) { if (!keep) $('lerr').textContent = ''; $('btnBack').classList.toggle('hide', !Object.keys(profiles()).length); loginView('lgNew'); }
+function bumpIdle() { clearTimeout(idleT); if (S.pass) idleT = setTimeout(() => { S.pass = ''; location.reload(); }, CFG.IDLE_MIN * 60000); }
+['click', 'keydown', 'touchstart', 'scroll'].forEach(ev => document.addEventListener(ev, bumpIdle, { passive: true }));
+function doLogout() { S = { user: '', pass: '', dir: '' }; location.reload(); }
+
+/* ---------- load ---------- */
+async function start() {
+  $('vLogin').classList.add('hide'); $('vApp').classList.remove('hide');
+  $('meName').textContent = who(S.user);
+  try { const n = await getJson('names.json'); Object.assign(NAMES, n.d); } catch (e) { }
+  $('meName').textContent = who(S.user);
+  fOwnerFilter = CFG.LEADS.includes(S.user) ? 'all' : S.user;
+  await reload(true);
+  await saveSeen({ last_open: bkk().iso });
+  go(location.hash === '#quick' ? 'quick' : 'today');
+  maybeModal();
+  window.APP_READY = true;
+  bumpIdle();
+  clearInterval(pollT); pollT = setInterval(() => { if (S.pass && view !== 'form') reload(true).then(maybeModal); }, CFG.POLL_MIN * 60000);
+}
+async function reload(silent) {
+  try {
+    const [tl, ll, il, sl] = await Promise.all([propfind('tasks'), propfind('logs'), propfind('inbox'), propfind('seen')]);
+    const keep = new Map();
+    await pool(tl.filter(f => f.name.endsWith('.json')), 8, async f => {
+      const id = f.name.replace(/\.json$/, ''), old = T.get(id);
+      if (old && old.etag && old.etag === f.etag) { keep.set(id, old); return; }
+      const g = await getJson('tasks/' + f.name); keep.set(id, { d: g.d, etag: g.etag || f.etag });
+    });
+    T = keep;
+    LOGS = ll.map(f => f.name).filter(n => n.endsWith('.json')).sort();
+    const sv = {}; await pool(sl.filter(f => f.name.endsWith('.json')), 6, async f => { try { sv[f.name.replace(/\.json$/, '')] = (await getJson('seen/' + f.name)).d; } catch (e) { } });
+    SEEN = sv;
+    INBOX = (await pool(il.filter(f => f.name.endsWith('.json')), 6, async f => ({ name: f.name, d: (await getJson('inbox/' + f.name)).d }))).sort((a, b) => b.name.localeCompare(a.name));
+    if (!silent) toast('โหลดใหม่แล้ว');
+    render();
+  } catch (e) { if (e.status === 401) { alert('App password ใช้ไม่ได้แล้ว — ต้องเข้าระบบใหม่'); doLogout(); } else toast('โหลดไม่สำเร็จ: ' + e.message); }
+}
+
+/* ---------- navigation ---------- */
+function go(v) { if (v !== 'form' && v !== 'detail') prevView = v; view = v; ['vQuick', 'vToday', 'vWho', 'vProj', 'vForm', 'vDetail'].forEach(x => $(x).classList.add('hide')); $({ quick: 'vQuick', today: 'vToday', who: 'vWho', proj: 'vProj', form: 'vForm', detail: 'vDetail' }[v]).classList.remove('hide'); document.querySelectorAll('header button[data-v]').forEach(b => b.classList.toggle('on', b.dataset.v === v)); render(); window.scrollTo(0, 0); }
+function back() { go(prevView); maybeModal(); }
+function render() { if (view === 'today') renderToday(); if (view === 'proj') renderProj(); if (view === 'who') renderWho(); }
+
+/* ---------- lists ---------- */
+function active(d) { return d.status !== 'done' && d.status !== 'cancelled'; }
+function matchF(d) { return fOwnerFilter === 'all' || owners(d).includes(fOwnerFilter); }
+function filterBar(id) { const opts = [[S.user, 'งานของฉัน'], ['all', 'ทั้งหมด']].concat(CFG.PEOPLE.filter(p => p !== S.user).map(p => [p, who(p)])); $(id).innerHTML = opts.map(([k, l]) => `<button class="${fOwnerFilter === k ? 'on' : ''}" onclick="fOwnerFilter='${esc(k)}';render()">${esc(l)}</button>`).join(''); }
+function row(d, whenTxt, whenCls) {
+  const nLog = LOGS.filter(n => n.startsWith(d.id + '__')).length;
+  return `<div class="row" data-id="${esc(d.id)}" onclick="openDetail('${esc(d.id)}')">
+    <div class="chk ${d.status === 'done' ? 'done' : ''}" title="กดเสร็จ" onclick="event.stopPropagation();toggleDone('${esc(d.id)}')"></div>
+    <div class="when ${whenCls || ''}">${esc(whenTxt || '—')}</div>
+    <div class="t">${d.star ? '<span class="star">⭐</span> ' : ''}${esc(d.title)}
+      <div class="meta">${isPending(d) ? '<span class="pendtag">📨 รอรับ</span>' : ''}${owners(d).map(o => `<span class="tag ${['chanon', 'apinya'].includes(o) ? 'w-' + o : 'w-other'}">${esc(who(o))}</span>`).join('')}${d.project ? `<span class="tag proj">${esc(d.project)}</span>` : ''}<span class="st st-${esc(d.status)}">${esc(STL[d.status] || d.status)}${d.status === 'waiting' && d.waiting_for ? ' · ' + esc(d.waiting_for) : ''}</span>${d.delegate ? ' → ' + esc(d.delegate) : ''}${d.due_time ? ' 🕘' + esc(d.due_time) : ''}${nLog ? ' 📝' + nLog : ''}</div></div></div>`;
+}
+function card(title, color, rows) { return rows.length ? `<div class="card"><h3 style="color:${color || 'inherit'}">${title} (${rows.length})</h3>${rows.join('')}</div>` : ''; }
+function renderToday() {
+  const now = bkk(), today = now.date;
+  $('todayTitle').textContent = 'วันนี้ · ' + thDate(today, true);
+  filterBar('fTod');
+  const all = [...T.values()].map(x => x.d).filter(matchF);
+  const act = all.filter(d => active(d) && !(ownerOf(d) === S.user && isPending(d)));
+  const byDue = (a, b) => (a.due_date || '9').localeCompare(b.due_date || '9') || (a.due_time || '99').localeCompare(b.due_time || '99');
+  const myPend = [...T.values()].map(x => x.d).filter(d => ownerOf(d) === S.user && isPending(d)).sort(byDue);
+  const theirPend = [...T.values()].map(x => x.d).filter(d => isPending(d) && d.assigned_by === S.user && ownerOf(d) !== S.user).sort(byDue);
+  const late = act.filter(d => d.due_date && d.due_date < today).sort(byDue);
+  const tod = act.filter(d => d.due_date === today).sort(byDue);
+  const soon = act.filter(d => { if (!d.due_date || d.due_date <= today) return false; const n = dayDiff(d.due_date, today); return d.star ? n <= 3 : n === 1; }).sort(byDue);
+  const shown = new Set([...late, ...tod, ...soon].map(d => d.id));
+  const wait = act.filter(d => d.status === 'waiting' && !shown.has(d.id)).sort(byDue);
+  const nodue = act.filter(d => !d.due_date && d.status !== 'waiting').sort((a, b) => (b.star ? 1 : 0) - (a.star ? 1 : 0));
+  const done = all.filter(d => d.status === 'done' && d.done_at && d.done_at.slice(0, 10) === today).sort((a, b) => b.done_at.localeCompare(a.done_at));
+  $('kpi').innerHTML = [[late.length, 'เลยกำหนด', 'var(--late)'], [tod.length, 'วันนี้', ''], [soon.length, 'กำลังจะถึง', 'var(--ck)'], [act.filter(d => d.status === 'waiting').length, 'รอคนอื่น', 'var(--warn)'], [done.length, 'เสร็จวันนี้', 'var(--ok)'], [INBOX.length, 'รอจัด', 'var(--inb)']].map(([n, l, c]) => `<div class="kpi"><b style="color:${c}">${n}</b><span>${l}</span></div>`).join('');
+  const starN = act.filter(d => d.star).length;
+  $('starWarn').innerHTML = act.length >= 5 && starN / act.length > 0.3 ? `<div class="note">⭐ ติดดาวไว้ ${starN} จาก ${act.length} งานที่ค้าง (${Math.round(100 * starN / act.length)}%) — ถ้าสำคัญทุกงาน ก็เหมือนไม่มีงานไหนสำคัญ 😄 ลองเอาดาวออกจากงานที่เตือนแค่ "พรุ่งนี้" ก็พอ</div>` : '';
+  const soonTxt = d => { const n = dayDiff(d.due_date, today); return n === 1 ? 'พรุ่งนี้' : 'อีก ' + n + ' วัน'; };
+  let h = '';
+  if (INBOX.length) h += `<div class="card" style="border-color:#c9b6e4"><h3 style="color:var(--inb)">📥 รอจัด (${INBOX.length})</h3>${INBOX.map(x => `<div class="row" style="cursor:default"><div class="t">${esc(x.d.text || '(รูป)')}${(x.d.imgs || []).length ? ' 🖼' + x.d.imgs.length : ''}<div class="meta">จดโดย ${esc(who(x.d.by))} · ${esc(thDate(x.d.at.slice(0, 10)))} ${esc(x.d.at.slice(11, 16))}</div></div><button class="btn ghost sm" onclick="sortInbox('${esc(x.name)}')">จัด</button></div>`).join('')}</div>`;
+  h += card('📨 รอฉันรับ', 'var(--warn)', myPend.map(d => row(d, thDate(d.due_date))));
+  h += card('⚠ เลยกำหนด', 'var(--late)', late.map(d => row(d, thDate(d.due_date), 'late')));
+  h += card('📌 วันนี้', '', tod.map(d => row(d, d.due_time || 'วันนี้')));
+  h += card('⏳ กำลังจะถึง', 'var(--ck)', soon.map(d => row(d, soonTxt(d))));
+  h += card('⌛ รอคนอื่น', 'var(--warn)', wait.map(d => row(d, d.due_date ? thDate(d.due_date) : '—')));
+  h += card('🗂 ไม่มีกำหนด', 'var(--mute)', nodue.map(d => row(d, '—')));
+  h += card('📤 ที่ฉันมอบไป รอเขารับ', 'var(--mute)', theirPend.map(d => row(d, thDate(d.due_date))));
+  h += card('✓ เสร็จวันนี้', 'var(--ok)', done.map(d => row(d, d.done_at.slice(11, 16))));
+  $('todayBody').innerHTML = h || '<div class="card">ยังไม่มีงาน · กด "＋ เพิ่มงาน" หรือ "⚡ จดไว"</div>';
+}
+function renderProj() {
+  filterBar('fProj');
+  const today = bkk().date, g = {};
+  [...T.values()].map(x => x.d).filter(d => active(d) && matchF(d)).forEach(d => (g[d.project || ''] = g[d.project || ''] || []).push(d));
+  const ks = Object.keys(g).sort((a, b) => (a ? 0 : 1) - (b ? 0 : 1) || a.localeCompare(b, 'th'));
+  $('projBody').innerHTML = ks.map(k => card(esc(k || 'ไม่มีโปรเจกต์'), '', g[k].sort((a, b) => (a.due_date || '9').localeCompare(b.due_date || '9')).map(d => row(d, d.due_date ? thDate(d.due_date) : '—', d.due_date && d.due_date < today ? 'late' : '')))).join('') || '<div class="card">ไม่มีงานค้าง 🎉</div>';
+}
+
+/* ---------- images ---------- */
+function pickImgs(inp, prevId) {
+  for (const f of inp.files) pendImgs[prevId].push(f);
+  inp.value = ''; showPend(prevId);
+}
+function showPend(prevId) { const el = $(prevId); el.innerHTML = ''; pendImgs[prevId].forEach((f, i) => { const im = document.createElement('img'); im.src = URL.createObjectURL(f); im.title = 'กดเพื่อเอาออก'; im.onclick = () => { pendImgs[prevId].splice(i, 1); showPend(prevId); }; el.appendChild(im); }); }
+async function shrink(file) {
+  const bmp = await createImageBitmap(file);
+  const s = Math.min(1, CFG.IMG_MAX / Math.max(bmp.width, bmp.height));
+  const c = document.createElement('canvas'); c.width = Math.round(bmp.width * s); c.height = Math.round(bmp.height * s);
+  c.getContext('2d').drawImage(bmp, 0, 0, c.width, c.height);
+  return await new Promise(r => c.toBlob(r, 'image/jpeg', 0.85));
+}
+async function uploadImgs(prevId, prefix) {
+  const names = [], st = bkk().stamp;
+  for (let i = 0; i < pendImgs[prevId].length; i++) {
+    const n = `${prefix}${st}-${S.user}-${i + 1}.jpg`;
+    await putNew('img/' + n, await shrink(pendImgs[prevId][i]), 'image/jpeg');
+    names.push(n);
+  }
+  pendImgs[prevId] = []; showPend(prevId);
+  return names;
+}
+const imgCache = new Map();
+async function imgUrl(n) { if (imgCache.has(n)) return imgCache.get(n); const r = await dav('GET', 'img/' + n); if (!r.ok) throw httpErr(r, 'รูป'); const u = URL.createObjectURL(await r.blob()); imgCache.set(n, u); return u; }
+function fillImgs(el) { el.querySelectorAll('img[data-n]').forEach(async im => { try { im.src = await imgUrl(im.dataset.n); im.onclick = () => { $('bigImg').src = im.src; $('big').classList.remove('hide'); }; } catch (e) { im.alt = 'โหลดรูปไม่ได้'; } }); }
+
+/* ---------- quick ---------- */
+async function saveQuick() {
+  const text = $('qText').value.trim();
+  if (!text && !pendImgs.qPrev.length) return;
+  $('btnQ').disabled = true; $('qMsg').textContent = 'กำลังส่ง…';
+  try {
+    const n = bkk(), name = `${n.stamp}-${S.user}-${rand4()}`;
+    const imgs = await uploadImgs('qPrev', 'inbox_' + name + '__');
+    const d = { by: S.user, at: n.iso, text, imgs };
+    await putNew('inbox/' + name + '.json', JSON.stringify(d, null, 2));
+    INBOX.unshift({ name: name + '.json', d });
+    $('qText').value = ''; $('qMsg').innerHTML = '<span style="color:var(--ok)">✓ ส่งแล้ว ' + n.time + ' → ลงกล่อง "รอจัด"</span>';
+  } catch (e) { $('qMsg').innerHTML = '<span class="err">ส่งไม่สำเร็จ: ' + esc(e.message) + '</span>'; }
+  $('btnQ').disabled = false;
+}
+function sortInbox(name) { const x = INBOX.find(i => i.name === name); if (!x) return; fromInbox = x; openForm(null, x.d.text); }
+
+/* ---------- form ---------- */
+function setOwnerSeg(o) { owner = o; document.querySelectorAll('#fOwner button').forEach(b => b.classList.toggle('on', b.dataset.o === o)); }
+function buildOwnerSeg() { $('fOwner').innerHTML = CFG.PEOPLE.map(p => `<button data-o="${esc(p)}">${esc(who(p))}${p === S.user ? ' (ฉัน)' : ''}</button>`).join(''); document.querySelectorAll('#fOwner button').forEach(b => b.onclick = () => setOwnerSeg(b.dataset.o)); }
+function openForm(d, prefill) {
+  editing = d || null;
+  if (!prefill && !d) fromInbox = null;
+  $('formTitle').textContent = d ? 'แก้รายละเอียดงาน' : (fromInbox ? 'จัดงานจากกล่องรอจัด' : 'เพิ่มงาน');
+  $('fTitle').value = d ? d.title : (prefill || '');
+  buildOwnerSeg();
+  setOwnerSeg(d ? ownerOf(d) : '');
+  $('fProjIn').value = d ? (d.project || '') : '';
+  $('fDelegate').value = d ? (d.delegate || '') : '';
+  $('fDate').value = d ? (d.due_date || '') : '';
+  $('fTime').value = d ? (d.due_time || '') : '';
+  $('fStar').checked = d ? !!d.star : false;
+  $('fLink').value = d ? (d.link || '') : '';
+  $('fNote').value = ''; pendImgs.fPrev = []; showPend('fPrev');
+  $('fNoteWrap').classList.toggle('hide', !!d);
+  $('fErr').textContent = '';
+  $('projList').innerHTML = [...new Set([...T.values()].map(x => x.d.project).filter(Boolean))].sort().map(p => `<option value="${esc(p)}">`).join('');
+  go('form'); setTimeout(() => $('fTitle').focus(), 50);
+}
+async function saveForm() {
+  const title = $('fTitle').value.trim();
+  if (!title) { $('fErr').textContent = 'กรอกชื่องาน'; return; }
+  if (!owner) { $('fErr').textContent = 'เลือกผู้รับผิดชอบ'; return; }
+  if (!$('fDate').value) { $('fErr').textContent = 'ใส่วันกำหนด'; return; }
+  if ($('fTime').value && !$('fDate').value) { $('fErr').textContent = 'ใส่เวลาแล้วต้องใส่วันที่ด้วย'; return; }
+  $('btnSave').disabled = true; $('fErr').textContent = '';
+  const n = bkk();
+  const ow = [owner], toOther = owner !== S.user;
+  try {
+    if (editing) {
+      const changed = ownerOf(editing) !== owner;
+      const asg = changed ? (toOther ? { accepted: false, assigned_by: S.user, assigned_at: n.iso, returned_by: null, return_reason: null } : { accepted: true, accepted_at: n.iso, returned_by: null, return_reason: null }) : {};
+      const d = Object.assign({}, editing, asg, { title, owner: ow, project: $('fProjIn').value.trim() || null, delegate: $('fDelegate').value.trim() || null, due_date: $('fDate').value || null, due_time: $('fTime').value || null, star: $('fStar').checked, link: $('fLink').value.trim() || null, updated_by: S.user, updated_at: n.iso });
+      await putTask(d, T.get(d.id).etag);
+      await writeLog(d.id, { text: changed ? (toOther ? 'มอบให้ ' + who(owner) : 'รับทำเอง') : 'แก้รายละเอียดงาน', edit: true });
+      toast('บันทึกแล้ว'); openDetail(d.id);
+    } else {
+      const id = 'T' + n.stamp + '-' + rand4();
+      const d = { id, title, owner: ow, project: $('fProjIn').value.trim() || null, delegate: $('fDelegate').value.trim() || null, due_date: $('fDate').value || null, due_time: $('fTime').value || null, star: $('fStar').checked, status: 'todo', waiting_for: null, accepted: !toOther, accepted_at: toOther ? null : n.iso, assigned_by: toOther ? S.user : null, assigned_at: toOther ? n.iso : null, returned_by: null, return_reason: null, link: $('fLink').value.trim() || null, created_by: S.user, created_at: n.iso, updated_by: S.user, updated_at: n.iso, done_at: null, gcal_event_id: null };
+      await putTask(d, null);
+      const imgs = await uploadImgs('fPrev', id + '__');
+      let firstText = $('fNote').value.trim();
+      if (fromInbox) {
+        firstText = ('จากกล่องรอจัด (' + who(fromInbox.d.by) + ' ' + fromInbox.d.at.slice(0, 16).replace('T', ' ') + '): ' + (fromInbox.d.text || '')) + (firstText ? '\n' + firstText : '');
+        imgs.unshift(...(fromInbox.d.imgs || []));
+      }
+      await writeLog(id, { text: 'สร้างงาน' + (toOther ? ' · มอบให้ ' + who(owner) : '') + (firstText ? '\n' + firstText : ''), imgs });
+      if (fromInbox) { const r = await dav('DELETE', 'inbox/' + fromInbox.name); if (r.ok || r.status === 404) INBOX = INBOX.filter(x => x !== fromInbox); fromInbox = null; }
+      toast('เพิ่มงานแล้ว'); go(prevView);
+    }
+  } catch (e) { $('fErr').textContent = e.message; if (e.status === 412) await reload(true); }
+  $('btnSave').disabled = false;
+}
+
+/* ---------- detail ---------- */
+async function writeLog(id, x) {
+  const n = bkk(), name = `${id}__${n.stamp}-${S.user}-${rand4()}.json`;
+  await putNew('logs/' + name, JSON.stringify(Object.assign({ task: id, by: S.user, at: n.iso }, x), null, 2));
+  LOGS.push(name); LOGS.sort();
+}
+async function openDetail(id) {
+  const t = T.get(id); if (!t) return; cur = t.d;
+  const d = cur;
+  $('dTitle').innerHTML = (d.star ? '<span class="star">⭐</span> ' : '') + esc(d.title);
+  $('dSub').innerHTML = owners(d).map(o => `<span class="tag ${['chanon', 'apinya'].includes(o) ? 'w-' + o : 'w-other'}">${esc(who(o))}</span>`).join('') + (d.project ? `<span class="tag proj">${esc(d.project)}</span>` : '') + (d.due_date ? ' · กำหนด ' + esc(thDate(d.due_date, true)) + (d.due_time ? ' ' + esc(d.due_time) : '') : ' · ไม่มีกำหนด') + (d.delegate ? ' · มอบต่อ ' + esc(d.delegate) : '') + ' · สร้างโดย ' + esc(who(d.created_by));
+  $('dAcc').innerHTML = !isPending(d) ? '' : ownerOf(d) === S.user
+    ? `<div class="accbar">📨 ${esc(who(d.assigned_by || d.created_by))} มอบงานนี้ให้คุณ${d.returned_by ? ` (↩️ ${esc(who(d.returned_by))} ส่งกลับ${d.return_reason ? ': ' + esc(d.return_reason) : ''})` : ''}<br><button class="btn sm" style="margin-top:6px" onclick="acceptTask('${esc(d.id)}')">${d.returned_by ? 'รับทำเอง' : 'รับงาน'}</button> ${d.returned_by ? `<button class="btn ghost sm" style="margin-top:6px" onclick="reassign('${esc(d.id)}')">มอบคนอื่น</button>` : `<button class="btn ghost sm" style="margin-top:6px" onclick="rejectTask('${esc(d.id)}')">ไม่ใช่ของฉัน</button>`}</div>`
+    : `<div class="accbar">⏳ รอ ${esc(who(ownerOf(d)))} กดรับงาน (มอบโดย ${esc(who(d.assigned_by || d.created_by))} · ${esc(ago(d.assigned_at))})</div>`;
+  $('dStatus').innerHTML = STATUS.map(([k, l]) => `<button class="${d.status === k ? 'on' : ''}" onclick="setStatus('${k}')">${l}</button>`).join('');
+  $('dWaitBox').classList.toggle('hide', d.status !== 'waiting'); $('dWait').value = d.waiting_for || '';
+  $('dWait').onchange = () => { if (view === 'detail' && cur && cur.id === d.id && $('dWait').value.trim() !== (cur.waiting_for || '')) setStatus('waiting', true); };
+  $('dLink').innerHTML = d.link ? '🔗 ' + (/^https?:\/\//.test(d.link) ? `<a href="${esc(d.link)}" target="_blank" rel="noopener noreferrer">${esc(d.link)}</a>` : esc(d.link)) : '';
+  $('dNote').value = ''; pendImgs.dPrev = []; showPend('dPrev');
+  go('detail');
+  $('dTl').innerHTML = '<div class="pend">กำลังโหลด…</div>';
+  try {
+    const names = LOGS.filter(n => n.startsWith(id + '__')).reverse();
+    const logs = await pool(names, 6, async n => (await getJson('logs/' + n)).d);
+    $('dTl').innerHTML = logs.map(l => `<div class="ev"><div class="h">${esc(thDate(l.at.slice(0, 10)))} ${esc(l.at.slice(11, 16))} · ${esc(who(l.by))}</div>${l.status_change ? 'เปลี่ยนสถานะ ' + esc(STL[l.status_change.from] || '') + ' → <b>' + esc(STL[l.status_change.to] || '') + '</b>' + (l.text ? '\n' : '') : ''}${esc(l.text || '')}${(l.imgs || []).length ? '<div class="photos">' + l.imgs.map(n => `<img data-n="${esc(n)}" alt="…">`).join('') + '</div>' : ''}</div>`).join('') || '<div class="pend">ยังไม่มีบันทึก</div>';
+    fillImgs($('dTl'));
+  } catch (e) { $('dTl').innerHTML = '<div class="err">โหลดไทม์ไลน์ไม่ได้: ' + esc(e.message) + '</div>'; }
+}
+async function setStatus(st, waitOnly) {
+  const d0 = cur; if (!d0) return;
+  if (st === 'cancelled' && !confirm('ยกเลิกงานนี้?')) return;
+  if (st === d0.status && !waitOnly) return;
+  const n = bkk();
+  const imp = isPending(d0) && ownerOf(d0) === S.user ? { accepted: true, accepted_at: bkk().iso } : {};
+  const d = Object.assign({}, d0, imp, { status: st, updated_by: S.user, updated_at: n.iso, done_at: st === 'done' ? n.iso : null, waiting_for: st === 'waiting' ? ($('dWait').value.trim() || d0.waiting_for || null) : null });
+  try {
+    await putTask(d, T.get(d.id).etag);
+    await writeLog(d.id, waitOnly ? { text: 'รอ: ' + (d.waiting_for || '-') } : { status_change: { from: d0.status, to: st }, text: st === 'waiting' && d.waiting_for ? 'รอ: ' + d.waiting_for : '' });
+    toast(STL[st] ? 'สถานะ: ' + STL[st] : 'บันทึกแล้ว');
+    if (st === 'cancelled') back(); else if (view === 'detail' && cur && cur.id === d.id) openDetail(d.id); else render();
+  } catch (e) { alert(e.message); if (e.status === 412) { await reload(true); openDetail(d0.id); } }
+}
+async function toggleDone(id) {
+  const t = T.get(id); if (!t) return;
+  const to = t.d.status === 'done' ? 'doing' : 'done', n = bkk();
+  const imp = isPending(t.d) && ownerOf(t.d) === S.user ? { accepted: true, accepted_at: n.iso } : {};
+  const d = Object.assign({}, t.d, imp, { status: to, updated_by: S.user, updated_at: n.iso, done_at: to === 'done' ? n.iso : null });
+  try { await putTask(d, t.etag); await writeLog(id, { status_change: { from: t.d.status, to } }); toast(to === 'done' ? '✓ เสร็จ' : 'กลับเป็นกำลังทำ'); render(); }
+  catch (e) { alert(e.message); if (e.status === 412) reload(true); }
+}
+async function addNote() {
+  if (!cur) return; const text = $('dNote').value.trim();
+  if (!text && !pendImgs.dPrev.length) return;
+  $('btnNote').disabled = true;
+  const id = cur.id;
+  try { const imgs = await uploadImgs('dPrev', id + '__'); await writeLog(id, { text, imgs }); toast('บันทึกแล้ว'); if (view === 'detail' && cur && cur.id === id) openDetail(id); else render(); }
+  catch (e) { alert('บันทึกไม่สำเร็จ: ' + e.message); }
+  $('btnNote').disabled = false;
+}
+
+/* ---------- seen / modal ---------- */
+async function saveSeen(patch) {
+  const me = Object.assign({}, SEEN[S.user] || {}, patch);
+  SEEN[S.user] = me;
+  try { await dav('PUT', 'seen/' + S.user + '.json', { body: JSON.stringify(me, null, 2), headers: { 'Content-Type': 'application/json' } }); } catch (e) { }
+}
+function myItems() {
+  const me = S.user, today = bkk().date, sv = SEEN[me] || {};
+  const all = [...T.values()].map(x => x.d);
+  const pend = all.filter(d => ownerOf(d) === me && isPending(d));
+  const pendIds = new Set(pend.map(d => d.id));
+  const mine = new Map(all.filter(d => ownerOf(d) === me && d.status !== 'cancelled').map(d => [d.id, d]));
+  const notes = {}; let maxSt = sv.notes_ack || '';
+  for (const n of LOGS) {
+    const id = n.split('__')[0], ls = logStamp(n);
+    if (!ls || !mine.has(id) || pendIds.has(id) || ls.by === me) continue;
+    if (ls.stamp <= (sv.notes_ack || '')) continue;
+    const acc = mine.get(id).accepted_at; if (acc && stampToIso(ls.stamp) <= acc) continue;
+    (notes[id] = notes[id] || []).push(ls); if (ls.stamp > maxSt) maxSt = ls.stamp;
+  }
+  const late = sv.overdue_ack === today ? [] : all.filter(d => ownerOf(d) === me && !isPending(d) && active(d) && d.due_date && d.due_date < today);
+  return { pend, notes, maxSt, late };
+}
+function maybeModal() {
+  if (!S.pass || view === 'form') return;
+  const { pend, notes, maxSt, late } = myItems();
+  const nNotes = Object.keys(notes).length;
+  if (!pend.length && !nNotes && !late.length) { $('modal').classList.add('hide'); return; }
+  let h = '';
+  for (const d of pend) {
+    const ret = d.returned_by ? `<div style="color:var(--late);font-size:14px">↩️ ${esc(who(d.returned_by))} ตอบว่า "ไม่ใช่ของฉัน"${d.return_reason ? ' — ' + esc(d.return_reason) : ''}</div>` : '';
+    h += `<div class="it" data-pend="${esc(d.id)}"><div class="t1">📨 ${d.star ? '⭐ ' : ''}${esc(d.title)}</div>
+      <div class="pend">มอบโดย ${esc(who(d.assigned_by || d.created_by))} · กำหนด ${esc(thDate(d.due_date, true))}${d.due_time ? ' ' + esc(d.due_time) : ''}${d.project ? ' · ' + esc(d.project) : ''}</div>${ret}
+      ${d.returned_by ? `<button class="btn sm" onclick="acceptTask('${esc(d.id)}')">รับทำเอง</button> <button class="btn ghost sm" onclick="reassign('${esc(d.id)}')">มอบคนอื่น</button>`
+        : `<button class="btn sm" onclick="acceptTask('${esc(d.id)}')">รับงาน</button> <button class="btn ghost sm" onclick="rejectTask('${esc(d.id)}')">ไม่ใช่ของฉัน</button>`}</div>`;
+  }
+  if (nNotes) {
+    h += `<div class="it"><div class="t1">💬 มีบันทึกใหม่ในงานของคุณ</div>${Object.entries(notes).map(([id, arr]) => { const t = T.get(id); return `<div class="pend">• ${esc(t ? t.d.title : id)} — ${arr.length} รายการ โดย ${esc([...new Set(arr.map(a => who(a.by)))].join(', '))}</div>`; }).join('')}
+      <button class="btn sm" style="margin-top:8px" onclick="ackNotes('${maxSt}')">รับทราบ</button></div>`;
+  }
+  if (late.length) {
+    h += `<div class="it"><div class="t1" style="color:var(--late)">⚠ งานของคุณที่เลยกำหนด (${late.length})</div>${late.map(d => `<div class="pend">• ${esc(d.title)} — กำหนด ${esc(thDate(d.due_date))}</div>`).join('')}
+      <button class="btn sm" style="margin-top:8px" onclick="ackLate()">รับทราบ</button></div>`;
+  }
+  $('mBody').innerHTML = h;
+  $('modal').classList.remove('hide');
+}
+async function ackNotes(st) { await saveSeen({ notes_ack: st }); maybeModal(); }
+async function ackLate() { await saveSeen({ overdue_ack: bkk().date }); maybeModal(); }
+async function acceptTask(id) {
+  const t = T.get(id); if (!t) return; const n = bkk();
+  const d = Object.assign({}, t.d, { accepted: true, accepted_at: n.iso, returned_by: null, return_reason: null, updated_by: S.user, updated_at: n.iso });
+  try { await putTask(d, t.etag); await writeLog(id, { text: 'รับงาน', event: 'accept' }); toast('รับงานแล้ว'); }
+  catch (e) { alert(e.message); if (e.status === 412) await reload(true); }
+  render(); maybeModal(); if (view === 'detail' && cur && cur.id === id) openDetail(id);
+}
+async function rejectTask(id) {
+  const t = T.get(id); if (!t) return;
+  const back = t.d.assigned_by || t.d.created_by;
+  if (!back || back === S.user) { alert('งานนี้ไม่มีคนมอบให้ส่งกลับ'); return; }
+  const reason = prompt('ส่งกลับให้ ' + who(back) + ' — เหตุผล (ไม่บังคับ)', '');
+  if (reason === null) return;
+  const n = bkk();
+  const d = Object.assign({}, t.d, { owner: [back], accepted: false, assigned_by: S.user, assigned_at: n.iso, returned_by: S.user, return_reason: reason.trim() || null, updated_by: S.user, updated_at: n.iso });
+  try { await putTask(d, t.etag); await writeLog(id, { text: 'ไม่ใช่ของฉัน → ส่งกลับให้ ' + who(back) + (reason.trim() ? '\nเหตุผล: ' + reason.trim() : ''), event: 'reject' }); toast('ส่งกลับให้ ' + who(back) + ' แล้ว'); }
+  catch (e) { alert(e.message); if (e.status === 412) await reload(true); }
+  render(); maybeModal(); if (view === 'detail' && cur && cur.id === id) openDetail(id);
+}
+function reassign(id) { const t = T.get(id); if (!t) return; $('modal').classList.add('hide'); openForm(t.d); }
+
+/* ---------- who ---------- */
+function renderWho() {
+  const today = bkk().date, now = Date.now(), all = [...T.values()].map(x => x.d);
+  const rows = CFG.PEOPLE.concat(Object.keys(NAMES).filter(u => !CFG.PEOPLE.includes(u))).map(p => {
+    const mine = all.filter(d => ownerOf(d) === p && active(d));
+    const pend = mine.filter(isPending);
+    const pendOld = pend.filter(d => d.assigned_at && now - Date.parse(d.assigned_at) > 86400000);
+    const late = mine.filter(d => !isPending(d) && d.due_date && d.due_date < today);
+    const wait = mine.filter(d => d.status === 'waiting');
+    return { p, n: mine.length, pend: pend.length, pendOld: pendOld.length, late: late.length, wait: wait.length, seen: (SEEN[p] || {}).last_open };
+  }).sort((a, b) => b.late - a.late || b.pendOld - a.pendOld || b.n - a.n);
+  $('whoBody').innerHTML = rows.map(r => {
+    const tot = Math.max(r.n, 1), oldSeen = !r.seen || dayDiff(today, r.seen.slice(0, 10)) >= 2;
+    return `<div class="card who-row" data-p="${esc(r.p)}" onclick="fOwnerFilter='${esc(r.p)}';go('today')">
+      <h3>${esc(who(r.p))} <span class="pend" style="font-weight:400">· ค้าง ${r.n}${r.late ? ` · <span style="color:var(--late)">เลยกำหนด ${r.late}</span>` : ''}${r.pend ? ` · รอรับ ${r.pend}` : ''}${r.pendOld ? ` · <span style="color:var(--warn)">รอรับเกิน 1 วัน ${r.pendOld}</span>` : ''}</span></h3>
+      <div style="height:10px;border-radius:5px;background:#eee;overflow:hidden;display:flex;margin:6px 0"><i style="width:${100 * r.late / tot}%;background:var(--late)"></i><i style="width:${100 * r.wait / tot}%;background:var(--warn)"></i><i style="width:${100 * r.pend / tot}%;background:#e6b85c"></i><i style="width:${100 * Math.max(0, r.n - r.late - r.wait - r.pend) / tot}%;background:var(--ck)"></i></div>
+      <div class="pend" style="${oldSeen ? 'color:var(--late)' : ''}">เปิดเว็บล่าสุด: ${esc(ago(r.seen))}</div></div>`;
+  }).join('') + '<p class="pend">■ แดง เลยกำหนด ■ ส้ม รอคนอื่น ■ เหลือง รอรับ ■ น้ำเงิน ปกติ</p>';
+}
+
+/* ---------- boot ---------- */
+if (Object.keys(profiles()).length) showProfiles(); else showNew();
+</script>
+</body>
+</html>
