@@ -224,7 +224,7 @@ let LOGS = [];       // file names in logs/
 let INBOX = [];      // [{name, d}]
 let SEEN = {};       // user -> {last_open, notes_ack, overdue_ack}
 let NAMES = Object.assign({}, CFG.NAMES);
-let view = 'today', prevView = 'today', cur = null, editing = null, fromInbox = null, owner = '', fOwnerFilter = 'all', pollT = null;
+let view = 'today', prevView = 'today', cur = null, editing = null, fromInbox = null, owner = [], reassignMode = false, fOwnerFilter = 'all', pollT = null;
 let pendImgs = { qPrev: [], fPrev: [], dPrev: [] };
 let pendingProfile = '', idleT = null;
 const $ = id => document.getElementById(id);
@@ -247,7 +247,12 @@ function stripW(e) { return e ? e.replace(/^W\//, '') : e; }
 function who(u) { return NAMES[u] || u; }
 function owners(d) { return Array.isArray(d.owner) && d.owner.length ? d.owner : [d.created_by]; }
 function ownerOf(d) { return owners(d)[0]; }
-function isPending(d) { return d.accepted === false && d.status !== 'done' && d.status !== 'cancelled'; }
+function accOf(d) { if (d.accepted_by && typeof d.accepted_by === 'object') return d.accepted_by; if (d.accepted !== false) { const m = {}; owners(d).forEach(o => m[o] = d.accepted_at || d.created_at || ''); return m; } return {}; }
+function pendingOwners(d) { if (d.status === 'done' || d.status === 'cancelled') return []; const a = accOf(d); return owners(d).filter(o => !(o in a)); }
+function isPendingFor(d, u) { return pendingOwners(d).includes(u); }
+function isPending(d) { return pendingOwners(d).length > 0; }
+function withAcc(d, acc) { d.accepted_by = acc; d.accepted = owners(d).every(o => o in acc); return d; }
+function tagOf(o) { return `<span class="tag ${['chanon', 'apinya'].includes(o) ? 'w-' + o : 'w-other'}">${esc(who(o))}</span>`; }
 function ago(iso) { if (!iso) return 'ยังไม่เคยเปิด'; const n = dayDiff(bkk().date, iso.slice(0, 10)); return n <= 0 ? 'วันนี้ ' + iso.slice(11, 16) : n === 1 ? 'เมื่อวาน ' + iso.slice(11, 16) : n + ' วันก่อน'; }
 function logStamp(n) { const m = /__(\d{8}-\d{6})-(.+)-[0-9a-f]{4}\.json$/.exec(n); return m ? { stamp: m[1], by: m[2] } : null; }
 function stampToIso(st) { return st.slice(0, 4) + '-' + st.slice(4, 6) + '-' + st.slice(6, 8) + 'T' + st.slice(9, 11) + ':' + st.slice(11, 13) + ':' + st.slice(13, 15) + '+07:00'; }
@@ -434,7 +439,7 @@ function row(d, whenTxt, whenCls) {
     <div class="chk ${d.status === 'done' ? 'done' : ''}" title="กดเสร็จ" onclick="event.stopPropagation();toggleDone('${esc(d.id)}')"></div>
     <div class="when ${whenCls || ''}">${esc(whenTxt || '—')}</div>
     <div class="t">${d.star ? '<span class="star">⭐</span> ' : ''}${esc(d.title)}
-      <div class="meta">${isPending(d) ? '<span class="pendtag">📨 รอรับ</span>' : ''}${owners(d).map(o => `<span class="tag ${['chanon', 'apinya'].includes(o) ? 'w-' + o : 'w-other'}">${esc(who(o))}</span>`).join('')}${d.project ? `<span class="tag proj">${esc(d.project)}</span>` : ''}<span class="st st-${esc(d.status)}">${esc(STL[d.status] || d.status)}${d.status === 'waiting' && d.waiting_for ? ' · ' + esc(d.waiting_for) : ''}</span>${d.delegate ? ' → ' + esc(d.delegate) : ''}${d.due_time ? ' 🕘' + esc(d.due_time) : ''}${nLog ? ' 📝' + nLog : ''}</div></div></div>`;
+      <div class="meta">${isPending(d) ? `<span class="pendtag">📨 รอรับ: ${esc(pendingOwners(d).map(who).join(', '))}</span>` : ''}${owners(d).map(tagOf).join('')}${d.project ? `<span class="tag proj">${esc(d.project)}</span>` : ''}<span class="st st-${esc(d.status)}">${esc(STL[d.status] || d.status)}${d.status === 'waiting' && d.waiting_for ? ' · ' + esc(d.waiting_for) : ''}</span>${d.delegate ? ' → ' + esc(d.delegate) : ''}${d.due_time ? ' 🕘' + esc(d.due_time) : ''}${nLog ? ' 📝' + nLog : ''}${d.status === 'done' && d.done_by ? ' · ✓ โดย ' + esc(who(d.done_by)) : ''}</div></div></div>`;
 }
 function card(title, color, rows) { return rows.length ? `<div class="card"><h3 style="color:${color || 'inherit'}">${title} (${rows.length})</h3>${rows.join('')}</div>` : ''; }
 function renderToday() {
@@ -442,10 +447,10 @@ function renderToday() {
   $('todayTitle').textContent = 'วันนี้ · ' + thDate(today, true);
   filterBar('fTod');
   const all = [...T.values()].map(x => x.d).filter(matchF);
-  const act = all.filter(d => active(d) && !(ownerOf(d) === S.user && isPending(d)));
+  const act = all.filter(d => active(d) && !isPendingFor(d, S.user));
   const byDue = (a, b) => (a.due_date || '9').localeCompare(b.due_date || '9') || (a.due_time || '99').localeCompare(b.due_time || '99');
-  const myPend = [...T.values()].map(x => x.d).filter(d => ownerOf(d) === S.user && isPending(d)).sort(byDue);
-  const theirPend = [...T.values()].map(x => x.d).filter(d => isPending(d) && d.assigned_by === S.user && ownerOf(d) !== S.user).sort(byDue);
+  const myPend = [...T.values()].map(x => x.d).filter(d => isPendingFor(d, S.user)).sort(byDue);
+  const theirPend = [...T.values()].map(x => x.d).filter(d => d.assigned_by === S.user && pendingOwners(d).some(o => o !== S.user)).sort(byDue);
   const late = act.filter(d => d.due_date && d.due_date < today).sort(byDue);
   const tod = act.filter(d => d.due_date === today).sort(byDue);
   const soon = act.filter(d => { if (!d.due_date || d.due_date <= today) return false; const n = dayDiff(d.due_date, today); return d.star ? n <= 3 : n === 1; }).sort(byDue);
@@ -460,12 +465,12 @@ function renderToday() {
   let h = '';
   if (INBOX.length) h += `<div class="card" style="border-color:#c9b6e4"><h3 style="color:var(--inb)">📥 รอจัด (${INBOX.length})</h3>${INBOX.map(x => `<div class="row" style="cursor:default"><div class="t">${esc(x.d.text || '(รูป)')}${(x.d.imgs || []).length ? ' 🖼' + x.d.imgs.length : ''}<div class="meta">จดโดย ${esc(who(x.d.by))} · ${esc(thDate(x.d.at.slice(0, 10)))} ${esc(x.d.at.slice(11, 16))}</div></div><button class="btn ghost sm" onclick="sortInbox('${esc(x.name)}')">จัด</button></div>`).join('')}</div>`;
   h += card('📨 รอฉันรับ', 'var(--warn)', myPend.map(d => row(d, thDate(d.due_date))));
+  h += card('📤 ที่ฉันมอบไป รอเขารับ', 'var(--warn)', theirPend.map(d => row(d, thDate(d.due_date))));
   h += card('⚠ เลยกำหนด', 'var(--late)', late.map(d => row(d, thDate(d.due_date), 'late')));
   h += card('📌 วันนี้', '', tod.map(d => row(d, d.due_time || 'วันนี้')));
   h += card('⏳ กำลังจะถึง', 'var(--ck)', soon.map(d => row(d, soonTxt(d))));
   h += card('⌛ รอคนอื่น', 'var(--warn)', wait.map(d => row(d, d.due_date ? thDate(d.due_date) : '—')));
   h += card('🗂 ไม่มีกำหนด', 'var(--mute)', nodue.map(d => row(d, '—')));
-  h += card('📤 ที่ฉันมอบไป รอเขารับ', 'var(--mute)', theirPend.map(d => row(d, thDate(d.due_date))));
   h += card('✓ เสร็จวันนี้', 'var(--ok)', done.map(d => row(d, d.done_at.slice(11, 16))));
   $('todayBody').innerHTML = h || '<div class="card">ยังไม่มีงาน · กด "＋ เพิ่มงาน" หรือ "⚡ จดไว"</div>';
 }
@@ -522,15 +527,16 @@ async function saveQuick() {
 function sortInbox(name) { const x = INBOX.find(i => i.name === name); if (!x) return; fromInbox = x; openForm(null, x.d.text); }
 
 /* ---------- form ---------- */
-function setOwnerSeg(o) { owner = o; document.querySelectorAll('#fOwner button').forEach(b => b.classList.toggle('on', b.dataset.o === o)); }
-function buildOwnerSeg() { $('fOwner').innerHTML = CFG.PEOPLE.map(p => `<button data-o="${esc(p)}">${esc(who(p))}${p === S.user ? ' (ฉัน)' : ''}</button>`).join(''); document.querySelectorAll('#fOwner button').forEach(b => b.onclick = () => setOwnerSeg(b.dataset.o)); }
+function setOwnerSeg(list) { owner = list.slice(); document.querySelectorAll('#fOwner button').forEach(b => b.classList.toggle('on', owner.includes(b.dataset.o))); }
+function buildOwnerSeg() { $('fOwner').innerHTML = CFG.PEOPLE.map(p => `<button data-o="${esc(p)}">${esc(who(p))}${p === S.user ? ' (ฉัน)' : ''}</button>`).join(''); document.querySelectorAll('#fOwner button').forEach(b => b.onclick = () => { const o = b.dataset.o; setOwnerSeg(owner.includes(o) ? owner.filter(x => x !== o) : owner.concat(o)); }); }
 function openForm(d, prefill) {
   editing = d || null;
   if (!prefill && !d) fromInbox = null;
   $('formTitle').textContent = d ? 'แก้รายละเอียดงาน' : (fromInbox ? 'จัดงานจากกล่องรอจัด' : 'เพิ่มงาน');
   $('fTitle').value = d ? d.title : (prefill || '');
   buildOwnerSeg();
-  setOwnerSeg(d ? ownerOf(d) : '');
+  setOwnerSeg(d && !reassignMode ? owners(d) : []);
+  reassignMode = false;
   $('fProjIn').value = d ? (d.project || '') : '';
   $('fDelegate').value = d ? (d.delegate || '') : '';
   $('fDate').value = d ? (d.due_date || '') : '';
@@ -546,23 +552,27 @@ function openForm(d, prefill) {
 async function saveForm() {
   const title = $('fTitle').value.trim();
   if (!title) { $('fErr').textContent = 'กรอกชื่องาน'; return; }
-  if (!owner) { $('fErr').textContent = 'เลือกผู้รับผิดชอบ'; return; }
+  if (!owner.length) { $('fErr').textContent = 'เลือกผู้รับผิดชอบอย่างน้อย 1 คน'; return; }
   if (!$('fDate').value) { $('fErr').textContent = 'ใส่วันกำหนด'; return; }
   if ($('fTime').value && !$('fDate').value) { $('fErr').textContent = 'ใส่เวลาแล้วต้องใส่วันที่ด้วย'; return; }
   $('btnSave').disabled = true; $('fErr').textContent = '';
   const n = bkk();
-  const ow = [owner], toOther = owner !== S.user;
+  const ow = CFG.PEOPLE.filter(p => owner.includes(p)).concat(owner.filter(p => !CFG.PEOPLE.includes(p))), me = S.user, toOther = ow.some(o => o !== me);
   try {
     if (editing) {
-      const changed = ownerOf(editing) !== owner;
-      const asg = changed ? (toOther ? { accepted: false, assigned_by: S.user, assigned_at: n.iso, returned_by: null, return_reason: null } : { accepted: true, accepted_at: n.iso, returned_by: null, return_reason: null }) : {};
+      const prev = owners(editing), added = ow.filter(o => !prev.includes(o)), removed = prev.filter(o => !ow.includes(o)), changed = added.length + removed.length > 0;
+      const acc = {}; const a0 = accOf(editing); ow.forEach(o => { if (o in a0) acc[o] = a0[o]; });
+      if (ow.includes(me) && !(me in acc)) acc[me] = n.iso;
+      const asg = changed ? Object.assign({ returned_by: null, return_reason: null }, added.some(o => o !== me) ? { assigned_by: me, assigned_at: n.iso } : {}) : {};
       const d = Object.assign({}, editing, asg, { title, owner: ow, project: $('fProjIn').value.trim() || null, delegate: $('fDelegate').value.trim() || null, due_date: $('fDate').value || null, due_time: $('fTime').value || null, star: $('fStar').checked, link: $('fLink').value.trim() || null, updated_by: S.user, updated_at: n.iso });
+      withAcc(d, acc);
       await putTask(d, T.get(d.id).etag);
-      await writeLog(d.id, { text: changed ? (toOther ? 'มอบให้ ' + who(owner) : 'รับทำเอง') : 'แก้รายละเอียดงาน', edit: true });
+      await writeLog(d.id, { text: changed ? 'ผู้รับผิดชอบ: ' + ow.map(who).join(', ') : 'แก้รายละเอียดงาน', edit: true });
       toast('บันทึกแล้ว'); openDetail(d.id);
     } else {
       const id = 'T' + n.stamp + '-' + rand4();
-      const d = { id, title, owner: ow, project: $('fProjIn').value.trim() || null, delegate: $('fDelegate').value.trim() || null, due_date: $('fDate').value || null, due_time: $('fTime').value || null, star: $('fStar').checked, status: 'todo', waiting_for: null, accepted: !toOther, accepted_at: toOther ? null : n.iso, assigned_by: toOther ? S.user : null, assigned_at: toOther ? n.iso : null, returned_by: null, return_reason: null, link: $('fLink').value.trim() || null, created_by: S.user, created_at: n.iso, updated_by: S.user, updated_at: n.iso, done_at: null, gcal_event_id: null };
+      const d = { id, title, owner: ow, project: $('fProjIn').value.trim() || null, delegate: $('fDelegate').value.trim() || null, due_date: $('fDate').value || null, due_time: $('fTime').value || null, star: $('fStar').checked, status: 'todo', waiting_for: null, accepted_by: ow.includes(me) ? { [me]: n.iso } : {}, accepted_at: ow.includes(me) ? n.iso : null, assigned_by: toOther ? S.user : null, assigned_at: toOther ? n.iso : null, returned_by: null, return_reason: null, link: $('fLink').value.trim() || null, created_by: S.user, created_at: n.iso, updated_by: S.user, updated_at: n.iso, done_at: null, gcal_event_id: null };
+      withAcc(d, d.accepted_by);
       await putTask(d, null);
       const imgs = await uploadImgs('fPrev', id + '__');
       let firstText = $('fNote').value.trim();
@@ -570,7 +580,7 @@ async function saveForm() {
         firstText = ('จากกล่องรอจัด (' + who(fromInbox.d.by) + ' ' + fromInbox.d.at.slice(0, 16).replace('T', ' ') + '): ' + (fromInbox.d.text || '')) + (firstText ? '\n' + firstText : '');
         imgs.unshift(...(fromInbox.d.imgs || []));
       }
-      await writeLog(id, { text: 'สร้างงาน' + (toOther ? ' · มอบให้ ' + who(owner) : '') + (firstText ? '\n' + firstText : ''), imgs });
+      await writeLog(id, { text: 'สร้างงาน' + (toOther ? ' · มอบให้ ' + ow.filter(o => o !== me).map(who).join(', ') : '') + (firstText ? '\n' + firstText : ''), imgs });
       if (fromInbox) { const r = await dav('DELETE', 'inbox/' + fromInbox.name); if (r.ok || r.status === 404) INBOX = INBOX.filter(x => x !== fromInbox); fromInbox = null; }
       toast('เพิ่มงานแล้ว'); go(prevView);
     }
@@ -588,10 +598,13 @@ async function openDetail(id) {
   const t = T.get(id); if (!t) return; cur = t.d;
   const d = cur;
   $('dTitle').innerHTML = (d.star ? '<span class="star">⭐</span> ' : '') + esc(d.title);
-  $('dSub').innerHTML = owners(d).map(o => `<span class="tag ${['chanon', 'apinya'].includes(o) ? 'w-' + o : 'w-other'}">${esc(who(o))}</span>`).join('') + (d.project ? `<span class="tag proj">${esc(d.project)}</span>` : '') + (d.due_date ? ' · กำหนด ' + esc(thDate(d.due_date, true)) + (d.due_time ? ' ' + esc(d.due_time) : '') : ' · ไม่มีกำหนด') + (d.delegate ? ' · มอบต่อ ' + esc(d.delegate) : '') + ' · สร้างโดย ' + esc(who(d.created_by));
-  $('dAcc').innerHTML = !isPending(d) ? '' : ownerOf(d) === S.user
-    ? `<div class="accbar">📨 ${esc(who(d.assigned_by || d.created_by))} มอบงานนี้ให้คุณ${d.returned_by ? ` (↩️ ${esc(who(d.returned_by))} ส่งกลับ${d.return_reason ? ': ' + esc(d.return_reason) : ''})` : ''}<br><button class="btn sm" style="margin-top:6px" onclick="acceptTask('${esc(d.id)}')">${d.returned_by ? 'รับทำเอง' : 'รับงาน'}</button> ${d.returned_by ? `<button class="btn ghost sm" style="margin-top:6px" onclick="reassign('${esc(d.id)}')">มอบคนอื่น</button>` : `<button class="btn ghost sm" style="margin-top:6px" onclick="rejectTask('${esc(d.id)}')">ไม่ใช่ของฉัน</button>`}</div>`
-    : `<div class="accbar">⏳ รอ ${esc(who(ownerOf(d)))} กดรับงาน (มอบโดย ${esc(who(d.assigned_by || d.created_by))} · ${esc(ago(d.assigned_at))})</div>`;
+  $('dSub').innerHTML = owners(d).map(tagOf).join('') + (d.project ? `<span class="tag proj">${esc(d.project)}</span>` : '') + (d.due_date ? ' · กำหนด ' + esc(thDate(d.due_date, true)) + (d.due_time ? ' ' + esc(d.due_time) : '') : ' · ไม่มีกำหนด') + (d.delegate ? ' · มอบต่อ ' + esc(d.delegate) : '') + ' · สร้างโดย ' + esc(who(d.created_by)) + (d.status === 'done' && d.done_by ? ' · <b style="color:var(--ok)">✓ เสร็จโดย ' + esc(who(d.done_by)) + ' ' + esc(thDate((d.done_at || '').slice(0, 10))) + ' ' + esc((d.done_at || '').slice(11, 16)) + '</b>' : '');
+  const pOw = pendingOwners(d), acc0 = accOf(d), retMe = d.returned_by && owners(d).length === 1 && owners(d)[0] === S.user;
+  const multi = owners(d).length > 1 ? `<div class="pend" style="margin-top:4px">${owners(d).map(o => esc(who(o)) + (o in acc0 ? ' ✓ รับแล้ว' : ' 📨 รอรับ')).join(' · ')}</div>` : '';
+  $('dAcc').innerHTML = isPendingFor(d, S.user)
+    ? `<div class="accbar">📨 ${esc(who(d.assigned_by || d.created_by))} มอบงานนี้ให้คุณ${retMe ? ` (↩️ ${esc(who(d.returned_by))} ส่งกลับ${d.return_reason ? ': ' + esc(d.return_reason) : ''})` : ''}${multi}<button class="btn sm" style="margin-top:6px" onclick="acceptTask('${esc(d.id)}')">${retMe ? 'รับทำเอง' : 'รับงาน'}</button> ${retMe ? `<button class="btn ghost sm" style="margin-top:6px" onclick="reassign('${esc(d.id)}')">มอบคนอื่น</button>` : `<button class="btn ghost sm" style="margin-top:6px" onclick="rejectTask('${esc(d.id)}')">ไม่ใช่ของฉัน</button>`}</div>`
+    : pOw.length ? `<div class="accbar">⏳ รอ ${esc(pOw.map(who).join(', '))} กดรับงาน (มอบโดย ${esc(who(d.assigned_by || d.created_by))} · ${esc(ago(d.assigned_at))})${multi}</div>`
+    : multi ? `<div class="card" style="padding:8px 12px">${multi}</div>` : '';
   $('dStatus').innerHTML = STATUS.map(([k, l]) => `<button class="${d.status === k ? 'on' : ''}" onclick="setStatus('${k}')">${l}</button>`).join('');
   $('dWaitBox').classList.toggle('hide', d.status !== 'waiting'); $('dWait').value = d.waiting_for || '';
   $('dWait').onchange = () => { if (view === 'detail' && cur && cur.id === d.id && $('dWait').value.trim() !== (cur.waiting_for || '')) setStatus('waiting', true); };
@@ -611,8 +624,8 @@ async function setStatus(st, waitOnly) {
   if (st === 'cancelled' && !confirm('ยกเลิกงานนี้?')) return;
   if (st === d0.status && !waitOnly) return;
   const n = bkk();
-  const imp = isPending(d0) && ownerOf(d0) === S.user ? { accepted: true, accepted_at: bkk().iso } : {};
-  const d = Object.assign({}, d0, imp, { status: st, updated_by: S.user, updated_at: n.iso, done_at: st === 'done' ? n.iso : null, waiting_for: st === 'waiting' ? ($('dWait').value.trim() || d0.waiting_for || null) : null });
+  const d = Object.assign({}, d0, { status: st, updated_by: S.user, updated_at: n.iso, done_at: st === 'done' ? n.iso : null, done_by: st === 'done' ? S.user : null, waiting_for: st === 'waiting' ? ($('dWait').value.trim() || d0.waiting_for || null) : null });
+  if (isPendingFor(d0, S.user)) withAcc(d, Object.assign({}, accOf(d0), { [S.user]: n.iso }));
   try {
     await putTask(d, T.get(d.id).etag);
     await writeLog(d.id, waitOnly ? { text: 'รอ: ' + (d.waiting_for || '-') } : { status_change: { from: d0.status, to: st }, text: st === 'waiting' && d.waiting_for ? 'รอ: ' + d.waiting_for : '' });
@@ -623,8 +636,8 @@ async function setStatus(st, waitOnly) {
 async function toggleDone(id) {
   const t = T.get(id); if (!t) return;
   const to = t.d.status === 'done' ? 'doing' : 'done', n = bkk();
-  const imp = isPending(t.d) && ownerOf(t.d) === S.user ? { accepted: true, accepted_at: n.iso } : {};
-  const d = Object.assign({}, t.d, imp, { status: to, updated_by: S.user, updated_at: n.iso, done_at: to === 'done' ? n.iso : null });
+  const d = Object.assign({}, t.d, { status: to, updated_by: S.user, updated_at: n.iso, done_at: to === 'done' ? n.iso : null, done_by: to === 'done' ? S.user : null });
+  if (isPendingFor(t.d, S.user)) withAcc(d, Object.assign({}, accOf(t.d), { [S.user]: n.iso }));
   try { await putTask(d, t.etag); await writeLog(id, { status_change: { from: t.d.status, to } }); toast(to === 'done' ? '✓ เสร็จ' : 'กลับเป็นกำลังทำ'); render(); }
   catch (e) { alert(e.message); if (e.status === 412) reload(true); }
 }
@@ -647,18 +660,25 @@ async function saveSeen(patch) {
 function myItems() {
   const me = S.user, today = bkk().date, sv = SEEN[me] || {};
   const all = [...T.values()].map(x => x.d);
-  const pend = all.filter(d => ownerOf(d) === me && isPending(d));
+  const pend = all.filter(d => isPendingFor(d, me));
   const pendIds = new Set(pend.map(d => d.id));
-  const mine = new Map(all.filter(d => ownerOf(d) === me && d.status !== 'cancelled').map(d => [d.id, d]));
+  // tasks I follow: I own (and accepted) OR I assigned (and am not an owner)
+  const follow = new Map();
+  for (const d of all) {
+    if (d.status === 'cancelled' || pendIds.has(d.id)) continue;
+    const own = owners(d).includes(me);
+    if (own) follow.set(d.id, { d, cut: accOf(d)[me] || '' });
+    else if (d.assigned_by === me) follow.set(d.id, { d, cut: d.assigned_at || '' });
+  }
   const notes = {}; let maxSt = sv.notes_ack || '';
   for (const n of LOGS) {
-    const id = n.split('__')[0], ls = logStamp(n);
-    if (!ls || !mine.has(id) || pendIds.has(id) || ls.by === me) continue;
+    const id = n.split('__')[0], ls = logStamp(n), f = follow.get(id);
+    if (!ls || !f || ls.by === me) continue;
     if (ls.stamp <= (sv.notes_ack || '')) continue;
-    const acc = mine.get(id).accepted_at; if (acc && stampToIso(ls.stamp) <= acc) continue;
+    if (f.cut && stampToIso(ls.stamp) <= f.cut) continue;
     (notes[id] = notes[id] || []).push(ls); if (ls.stamp > maxSt) maxSt = ls.stamp;
   }
-  const late = sv.overdue_ack === today ? [] : all.filter(d => ownerOf(d) === me && !isPending(d) && active(d) && d.due_date && d.due_date < today);
+  const late = sv.overdue_ack === today ? [] : all.filter(d => owners(d).includes(me) && !isPendingFor(d, me) && active(d) && d.due_date && d.due_date < today);
   return { pend, notes, maxSt, late };
 }
 function maybeModal() {
@@ -668,14 +688,16 @@ function maybeModal() {
   if (!pend.length && !nNotes && !late.length) { $('modal').classList.add('hide'); return; }
   let h = '';
   for (const d of pend) {
-    const ret = d.returned_by ? `<div style="color:var(--late);font-size:14px">↩️ ${esc(who(d.returned_by))} ตอบว่า "ไม่ใช่ของฉัน"${d.return_reason ? ' — ' + esc(d.return_reason) : ''}</div>` : '';
+    const retMe = d.returned_by && owners(d).length === 1;
+    const ret = retMe ? `<div style="color:var(--late);font-size:14px">↩️ ${esc(who(d.returned_by))} ตอบว่า "ไม่ใช่ของฉัน"${d.return_reason ? ' — ' + esc(d.return_reason) : ''}</div>` : '';
+    const others = owners(d).filter(o => o !== S.user);
     h += `<div class="it" data-pend="${esc(d.id)}"><div class="t1">📨 ${d.star ? '⭐ ' : ''}${esc(d.title)}</div>
-      <div class="pend">มอบโดย ${esc(who(d.assigned_by || d.created_by))} · กำหนด ${esc(thDate(d.due_date, true))}${d.due_time ? ' ' + esc(d.due_time) : ''}${d.project ? ' · ' + esc(d.project) : ''}</div>${ret}
-      ${d.returned_by ? `<button class="btn sm" onclick="acceptTask('${esc(d.id)}')">รับทำเอง</button> <button class="btn ghost sm" onclick="reassign('${esc(d.id)}')">มอบคนอื่น</button>`
+      <div class="pend">มอบโดย ${esc(who(d.assigned_by || d.created_by))} · กำหนด ${esc(thDate(d.due_date, true))}${d.due_time ? ' ' + esc(d.due_time) : ''}${d.project ? ' · ' + esc(d.project) : ''}${others.length ? ' · ร่วมกับ ' + esc(others.map(who).join(', ')) : ''}</div>${ret}
+      ${retMe ? `<button class="btn sm" onclick="acceptTask('${esc(d.id)}')">รับทำเอง</button> <button class="btn ghost sm" onclick="reassign('${esc(d.id)}')">มอบคนอื่น</button>`
         : `<button class="btn sm" onclick="acceptTask('${esc(d.id)}')">รับงาน</button> <button class="btn ghost sm" onclick="rejectTask('${esc(d.id)}')">ไม่ใช่ของฉัน</button>`}</div>`;
   }
   if (nNotes) {
-    h += `<div class="it"><div class="t1">💬 มีบันทึกใหม่ในงานของคุณ</div>${Object.entries(notes).map(([id, arr]) => { const t = T.get(id); return `<div class="pend">• ${esc(t ? t.d.title : id)} — ${arr.length} รายการ โดย ${esc([...new Set(arr.map(a => who(a.by)))].join(', '))}</div>`; }).join('')}
+    h += `<div class="it"><div class="t1">💬 ความเคลื่อนไหวในงานของคุณ</div>${Object.entries(notes).map(([id, arr]) => { const t = T.get(id), d = t && t.d; const doneTxt = d && d.status === 'done' && d.done_by && d.done_by !== S.user ? ` <b style="color:var(--ok)">✓ ปิดแล้วโดย ${esc(who(d.done_by))}</b>` : ''; return `<div class="pend">• ${esc(d ? d.title : id)} — ${arr.length} รายการ โดย ${esc([...new Set(arr.map(a => who(a.by)))].join(', '))}${doneTxt}</div>`; }).join('')}
       <button class="btn sm" style="margin-top:8px" onclick="ackNotes('${maxSt}')">รับทราบ</button></div>`;
   }
   if (late.length) {
@@ -689,33 +711,43 @@ async function ackNotes(st) { await saveSeen({ notes_ack: st }); maybeModal(); }
 async function ackLate() { await saveSeen({ overdue_ack: bkk().date }); maybeModal(); }
 async function acceptTask(id) {
   const t = T.get(id); if (!t) return; const n = bkk();
-  const d = Object.assign({}, t.d, { accepted: true, accepted_at: n.iso, returned_by: null, return_reason: null, updated_by: S.user, updated_at: n.iso });
-  try { await putTask(d, t.etag); await writeLog(id, { text: 'รับงาน', event: 'accept' }); toast('รับงานแล้ว'); }
+  const retMe = t.d.returned_by && owners(t.d).length === 1;
+  const d = Object.assign({}, t.d, { accepted_at: n.iso, updated_by: S.user, updated_at: n.iso }, retMe ? { returned_by: null, return_reason: null } : {});
+  withAcc(d, Object.assign({}, accOf(t.d), { [S.user]: n.iso }));
+  try { await putTask(d, t.etag); await writeLog(id, { text: retMe ? 'รับทำเอง' : 'รับงาน', event: 'accept' }); toast('รับงานแล้ว'); }
   catch (e) { alert(e.message); if (e.status === 412) await reload(true); }
   render(); maybeModal(); if (view === 'detail' && cur && cur.id === id) openDetail(id);
 }
 async function rejectTask(id) {
   const t = T.get(id); if (!t) return;
-  const back = t.d.assigned_by || t.d.created_by;
-  if (!back || back === S.user) { alert('งานนี้ไม่มีคนมอบให้ส่งกลับ'); return; }
-  const reason = prompt('ส่งกลับให้ ' + who(back) + ' — เหตุผล (ไม่บังคับ)', '');
+  const me = S.user, back = t.d.assigned_by || t.d.created_by, rest = owners(t.d).filter(o => o !== me);
+  if (!rest.length && (!back || back === me)) { alert('งานนี้ไม่มีคนมอบให้ส่งกลับ'); return; }
+  const reason = prompt(rest.length ? 'ถอนตัวจากงานนี้ (คนอื่นยังรับผิดชอบต่อ) — เหตุผล (ไม่บังคับ)' : 'ส่งกลับให้ ' + who(back) + ' — เหตุผล (ไม่บังคับ)', '');
   if (reason === null) return;
-  const n = bkk();
-  const d = Object.assign({}, t.d, { owner: [back], accepted: false, assigned_by: S.user, assigned_at: n.iso, returned_by: S.user, return_reason: reason.trim() || null, updated_by: S.user, updated_at: n.iso });
-  try { await putTask(d, t.etag); await writeLog(id, { text: 'ไม่ใช่ของฉัน → ส่งกลับให้ ' + who(back) + (reason.trim() ? '\nเหตุผล: ' + reason.trim() : ''), event: 'reject' }); toast('ส่งกลับให้ ' + who(back) + ' แล้ว'); }
+  const n = bkk(), r = reason.trim();
+  let d, txt;
+  if (rest.length) {
+    const acc = Object.assign({}, accOf(t.d)); delete acc[me];
+    d = withAcc(Object.assign({}, t.d, { owner: rest, updated_by: me, updated_at: n.iso }), acc);
+    txt = 'ไม่ใช่ของฉัน → ถอนตัว · เหลือ ' + rest.map(who).join(', ');
+  } else {
+    d = withAcc(Object.assign({}, t.d, { owner: [back], assigned_by: me, assigned_at: n.iso, returned_by: me, return_reason: r || null, updated_by: me, updated_at: n.iso }), {});
+    txt = 'ไม่ใช่ของฉัน → ส่งกลับให้ ' + who(back);
+  }
+  try { await putTask(d, t.etag); await writeLog(id, { text: txt + (r ? '\nเหตุผล: ' + r : ''), event: 'reject' }); toast(rest.length ? 'ถอนตัวแล้ว' : 'ส่งกลับให้ ' + who(back) + ' แล้ว'); }
   catch (e) { alert(e.message); if (e.status === 412) await reload(true); }
   render(); maybeModal(); if (view === 'detail' && cur && cur.id === id) openDetail(id);
 }
-function reassign(id) { const t = T.get(id); if (!t) return; $('modal').classList.add('hide'); openForm(t.d); }
+function reassign(id) { const t = T.get(id); if (!t) return; $('modal').classList.add('hide'); reassignMode = true; openForm(t.d); }
 
 /* ---------- who ---------- */
 function renderWho() {
   const today = bkk().date, now = Date.now(), all = [...T.values()].map(x => x.d);
   const rows = CFG.PEOPLE.concat(Object.keys(NAMES).filter(u => !CFG.PEOPLE.includes(u))).map(p => {
-    const mine = all.filter(d => ownerOf(d) === p && active(d));
-    const pend = mine.filter(isPending);
+    const mine = all.filter(d => owners(d).includes(p) && active(d));
+    const pend = mine.filter(d => isPendingFor(d, p));
     const pendOld = pend.filter(d => d.assigned_at && now - Date.parse(d.assigned_at) > 86400000);
-    const late = mine.filter(d => !isPending(d) && d.due_date && d.due_date < today);
+    const late = mine.filter(d => !isPendingFor(d, p) && d.due_date && d.due_date < today);
     const wait = mine.filter(d => d.status === 'waiting');
     return { p, n: mine.length, pend: pend.length, pendOld: pendOld.length, late: late.length, wait: wait.length, seen: (SEEN[p] || {}).last_open };
   }).sort((a, b) => b.late - a.late || b.pendOld - a.pendOld || b.n - a.n);
