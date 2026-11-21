@@ -282,12 +282,25 @@ async function putNew(p, body, type) { // never overwrites
   return stripW(r.headers.get('ETag'));
 }
 async function putTask(d, etag) {
-  const h = { 'Content-Type': 'application/json' };
-  if (etag) h['If-Match'] = etag; else h['If-None-Match'] = '*';
-  const r = await dav('PUT', 'tasks/' + d.id + '.json', { body: JSON.stringify(d, null, 2), headers: h });
+  const base = T.has(d.id) ? T.get(d.id).d : null;
+  const body = JSON.stringify(d, null, 2);
+  const put = async (h) => dav('PUT', 'tasks/' + d.id + '.json', { body, headers: Object.assign({ 'Content-Type': 'application/json' }, h) });
+  let r = await put(etag ? { 'If-Match': etag } : { 'If-None-Match': '*' });
+  if (r.status === 412 && etag && base) {
+    // 412 may be a real conflict OR an ETag format mismatch on the server (seen on real oc2).
+    // Re-read the file: if its content is still exactly what we loaded, nobody else changed it -> safe to retry.
+    const fresh = await getJson('tasks/' + d.id + '.json');
+    if (JSON.stringify(fresh.d) === JSON.stringify(base)) {
+      console.warn('[task_system] 412 without real change; cached etag', etag, 'server etag', fresh.etag);
+      r = fresh.etag && fresh.etag !== etag ? await put({ 'If-Match': fresh.etag }) : { status: 412 };
+      if (r.status === 412) r = await put({});   // content verified unchanged a moment ago
+    } else {
+      T.set(d.id, { d: fresh.d, etag: fresh.etag });
+    }
+  }
   if (r.status === 412) { const e = new Error('มีคนแก้งานนี้ก่อนหน้าคุณไม่กี่วินาที — กดโหลดใหม่แล้วลองอีกครั้ง'); e.status = 412; throw e; }
   if (r.status !== 201 && r.status !== 204) throw httpErr(r, 'บันทึกงาน');
-  const ne = stripW(r.headers.get('ETag'));
+  const ne = stripW(r.headers && r.headers.get('ETag'));
   T.set(d.id, { d, etag: ne || (await getJson('tasks/' + d.id + '.json')).etag });
 }
 async function pool(items, n, fn) { const out = []; let i = 0; await Promise.all(Array.from({ length: n }, async () => { while (i < items.length) { const k = i++; out[k] = await fn(items[k]); } })); return out; }
