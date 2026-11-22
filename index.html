@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-xX1w/PGZdG5DJPl6zt2nCyAoEA5OJ833YOn2iULHo/k='; style-src 'unsafe-inline'; connect-src https://oc2.dida.psu.ac.th; img-src blob: data:; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-DpEJgrAHtKM2OEVlXxveG1MWWIFsqJb1K/puMjdIPT4='; style-src 'unsafe-inline'; connect-src https://oc2.dida.psu.ac.th; img-src blob: data:; base-uri 'none'; form-action 'none'">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="งาน OEBRIC">
 <title>งาน OEBRIC</title>
@@ -77,6 +77,7 @@ table{width:100%;border-collapse:collapse;font-size:15px}td{border-bottom:1px so
 .dup{background:#fff4f0;border:1px solid #f0b8a6;border-radius:10px;padding:10px 12px;margin-top:8px;font-size:15px}
 .dup .r{display:flex;gap:8px;align-items:center;justify-content:space-between;border-top:1px dashed #f0cfc4;padding:6px 0}
 .subbar{font-size:13px;color:var(--mute)}
+.pl-row{display:flex;gap:8px;align-items:center;padding:9px 0;border-top:1px solid var(--line)}.pl-row:first-of-type{border-top:0}.pl-row .nm{flex:1;cursor:pointer;font-size:16px}.pl-row .nm:hover{text-decoration:underline}.pl-n{font-size:13px;border-radius:10px;padding:1px 8px;background:#eef2f8;color:var(--ck);white-space:nowrap}.pl-n.zero{background:#eef6ee;color:var(--ok)}.pl-x{font-size:12px;color:var(--mute)}details.pl>summary{cursor:pointer;font-weight:600;font-size:16px;padding:2px 0}
 .panel{background:#f7f6f2;border:1px solid #e2dfd6;border-radius:10px;padding:10px 12px;margin-top:10px}
 .wk h3{margin-bottom:6px}.wk .li{padding:6px 0;border-top:1px solid #efede6;font-size:15px}.wk .li:first-of-type{border-top:0}
 .wk .grp{font-weight:600;margin-top:8px}
@@ -125,6 +126,7 @@ body.present main{max-width:1400px;font-size:22px}body.present .wk .li{font-size
   <button data-v="today" data-click="go" data-a1="today">วันนี้</button>
   <button data-v="who" data-click="go" data-a1="who">ใครค้างอะไร</button>
   <button data-v="proj" data-click="go" data-a1="proj">ตามโปรเจกต์</button>
+  <button data-v="plist" data-click="go" data-a1="plist">📁 รายชื่อโปรเจกต์</button>
   <button data-v="week" data-click="wkGo">📊 สรุปสัปดาห์</button>
   <button data-v="search" data-click="go" data-a1="search">🔍 ค้นหา</button>
   <button data-click="openForm">＋ เพิ่มงาน</button>
@@ -179,6 +181,11 @@ body.present main{max-width:1400px;font-size:22px}body.present .wk .li{font-size
     <h2>ตามโปรเจกต์</h2><p class="sub">งานที่ยังไม่เสร็จ · เรียงตามวันกำหนด</p>
     <div class="filter" id="fProj"></div>
     <div id="projBody"></div>
+  </section>
+
+  <section id="vPlist" class="hide">
+    <h2>📁 รายชื่อโปรเจกต์</h2><p class="sub">กดชื่อเพื่อดูงานในโปรเจกต์ · ✏️ เปลี่ยนชื่อ (ถ้าตรงกับชื่อที่มีอยู่ = รวมเป็นโปรเจกต์เดียว) · ปิดได้เมื่อไม่มีงานค้าง</p>
+    <div id="plBody"></div>
   </section>
 
   <section id="vForm" class="hide">
@@ -266,6 +273,8 @@ let S = { user: '', pass: '', dir: '' };
 let T = new Map();   // id -> {d, etag}
 let LOGS = [];       // file names in logs/
 let INBOX = [];      // [{name, d}]
+let PROJ = { closed: new Map(), log: [] };   // from projects.json
+let plOpen = null, plMsg = '', plBusy = false;
 let SEEN = {};       // user -> {last_open, notes_ack, overdue_ack}
 let NAMES = Object.assign({}, CFG.NAMES);
 let view = 'today', prevView = 'today', cur = null, editing = null, fromInbox = null, owner = [], reassignMode = false, fOwnerFilter = 'all', pollT = null;
@@ -476,6 +485,7 @@ async function reload(silent) {
     LOGS = ll.map(f => f.name).filter(n => n.endsWith('.json') && safeName(n)).sort();
     const sv = {}; await pool(sl.filter(f => f.name.endsWith('.json') && safeName(f.name)), 6, async f => { try { sv[f.name.replace(/\.json$/, '')] = (await getJson('seen/' + f.name)).d; } catch (e) { } });
     SEEN = sv;
+    PROJ = await loadProjects();
     INBOX = (await pool(il.filter(f => f.name.endsWith('.json')), 6, async f => { if (!safeName(f.name)) { skipped++; return null; } try { const d = (await getJson('inbox/' + f.name)).d; if (!isObj(d)) { skipped++; return null; } return { name: f.name, d }; } catch (e) { if (e instanceof SyntaxError) { skipped++; return null; } throw e; } })).filter(Boolean).sort((a, b) => b.name.localeCompare(a.name));
     if (skipped !== SKIPPED) { SKIPPED = skipped; if (skipped) toast('⚠️ ข้าม ' + skipped + ' ไฟล์ที่ชื่อหรือเนื้อหาผิดรูปแบบ — แจ้ง อ.ชนนท์'); }
     if (!silent) toast('โหลดใหม่แล้ว');
@@ -484,9 +494,9 @@ async function reload(silent) {
 }
 
 /* ---------- navigation ---------- */
-function go(v) { if (v !== 'form' && v !== 'detail') prevView = v; view = v; ['vQuick', 'vToday', 'vWho', 'vProj', 'vWeek', 'vSearch', 'vForm', 'vDetail'].forEach(x => $(x).classList.add('hide')); $({ quick: 'vQuick', today: 'vToday', who: 'vWho', proj: 'vProj', week: 'vWeek', search: 'vSearch', form: 'vForm', detail: 'vDetail' }[v]).classList.remove('hide'); document.querySelectorAll('header button[data-v]').forEach(b => b.classList.toggle('on', b.dataset.v === v)); render(); window.scrollTo(0, 0); }
+function go(v) { if (v !== 'form' && v !== 'detail') prevView = v; view = v; ['vQuick', 'vToday', 'vWho', 'vProj', 'vPlist', 'vWeek', 'vSearch', 'vForm', 'vDetail'].forEach(x => $(x).classList.add('hide')); $({ quick: 'vQuick', today: 'vToday', who: 'vWho', proj: 'vProj', plist: 'vPlist', week: 'vWeek', search: 'vSearch', form: 'vForm', detail: 'vDetail' }[v]).classList.remove('hide'); document.querySelectorAll('header button[data-v]').forEach(b => b.classList.toggle('on', b.dataset.v === v)); render(); window.scrollTo(0, 0); }
 function back() { go(prevView); maybeModal(); }
-function render() { if (view === 'today') renderToday(); if (view === 'proj') renderProj(); if (view === 'who') renderWho(); if (view === 'week') renderWeek(); if (view === 'search') doSearch(); }
+function render() { if (view === 'today') renderToday(); if (view === 'proj') renderProj(); if (view === 'plist') renderPlist(); if (view === 'who') renderWho(); if (view === 'week') renderWeek(); if (view === 'search') doSearch(); }
 
 /* ---------- lists ---------- */
 function active(d) { return d.status !== 'done' && d.status !== 'cancelled' && d.status !== 'merged'; }
@@ -539,6 +549,121 @@ function renderProj() {
   [...T.values()].map(x => x.d).filter(d => active(d) && matchF(d)).forEach(d => (g[d.project || ''] = g[d.project || ''] || []).push(d));
   const ks = Object.keys(g).sort((a, b) => (a ? 0 : 1) - (b ? 0 : 1) || a.localeCompare(b, 'th'));
   $('projBody').innerHTML = ks.map(k => card(esc(k || 'ไม่มีโปรเจกต์'), '', g[k].sort((a, b) => (a.due_date || '9').localeCompare(b.due_date || '9')).map(d => row(d, d.due_date ? thDate(d.due_date) : '—', d.due_date && d.due_date < today ? 'late' : '')))).join('') || '<div class="card">ไม่มีงานค้าง 🎉</div>';
+}
+
+/* ---------- project list (projects.json) ---------- */
+const PJ_BAD = ['__proto__', 'constructor', 'prototype'];
+function pjOk(n) { return typeof n === 'string' && n.trim() === n && n.length > 0 && n.length <= 120 && !PJ_BAD.includes(n); }
+function normProj(x) {
+  const p = { closed: new Map(), log: [] };
+  if (!isObj(x)) return p;
+  if (isObj(x.closed)) for (const k of Object.keys(x.closed)) if (pjOk(k)) { const v = isObj(x.closed[k]) ? x.closed[k] : {}; p.closed.set(k, { at: typeof v.at === 'string' ? v.at.slice(0, 40) : '', by: typeof v.by === 'string' && safeName(v.by) ? v.by : '' }); }
+  if (Array.isArray(x.log)) p.log = x.log.filter(isObj).map(l => ({ act: String(l.act || '').slice(0, 20), name: String(l.name || '').slice(0, 120), to: l.to == null ? undefined : String(l.to).slice(0, 120), n: typeof l.n === 'number' ? l.n : undefined, why: l.why == null ? undefined : String(l.why).slice(0, 60), by: typeof l.by === 'string' && safeName(l.by) ? l.by : '', at: typeof l.at === 'string' ? l.at.slice(0, 40) : '' })).slice(-300);
+  return p;
+}
+function projOut(p) { const c = {}; [...p.closed.keys()].sort().forEach(k => c[k] = p.closed.get(k)); return { closed: c, log: p.log.slice(-300) }; }
+async function readProjects(known) { // -> {raw, d, etag, exists}
+  if (!known && !(await propfind('')).some(x => x.name === 'projects.json')) return { raw: 'null', d: null, etag: null, exists: false };
+  const r = await dav('GET', 'projects.json');
+  if (r.status === 404) return { raw: 'null', d: null, etag: null, exists: false };
+  if (!r.ok) throw httpErr(r, 'อ่าน projects.json');
+  const t = await r.text(); let d = null; try { d = JSON.parse(t); } catch (e) { d = null; }
+  return { raw: t, d, etag: stripW(r.headers.get('ETag') || r.headers.get('OC-ETag')), exists: true, bad: d === null };
+}
+let PROJ_ETAG = null;
+async function loadProjects() { // root PROPFIND first: no 404 noise when the file does not exist yet, and skip GET when unchanged
+  try {
+    const f = (await propfind('')).find(x => x.name === 'projects.json');
+    if (!f) { PROJ_ETAG = null; return normProj(null); }
+    if (f.etag && f.etag === PROJ_ETAG) return PROJ;
+    const r = await readProjects(true); PROJ_ETAG = f.etag; return normProj(r.d);
+  } catch (e) { return PROJ; }
+}
+async function saveProjects(mut) {
+  let prevRaw = null, last412 = false;
+  for (let i = 0; i < 4; i++) {
+    const cur = await readProjects();
+    const p = normProj(cur.d); mut(p);
+    // 412 with unchanged content = server ETag quirk (seen on real oc2) -> write without condition
+    const loose = (last412 && cur.raw === prevRaw) || cur.bad;
+    const h = { 'Content-Type': 'application/json' };
+    if (!loose) { if (cur.exists && cur.etag) h['If-Match'] = cur.etag; else if (!cur.exists) h['If-None-Match'] = '*'; }
+    const r = await dav('PUT', 'projects.json', { body: JSON.stringify(projOut(p), null, 2), headers: h });
+    if (r.status === 412) { prevRaw = cur.raw; last412 = true; continue; }
+    if (r.status !== 201 && r.status !== 204) throw httpErr(r, 'บันทึกรายชื่อโปรเจกต์');
+    PROJ = p; PROJ_ETAG = null; return p;
+  }
+  throw new Error('มีคนแก้รายชื่อโปรเจกต์พร้อมกัน — กดโหลดใหม่แล้วลองอีกครั้ง');
+}
+function projNames() { const s = new Set(); for (const { d } of T.values()) if (pjOk(d.project)) s.add(d.project); for (const k of PROJ.closed.keys()) s.add(k); return [...s].sort((a, b) => a.localeCompare(b, 'th')); }
+function projTasks(name) { return [...T.values()].map(x => x.d).filter(d => d.project === name); }
+function plRow(name, isClosed) {
+  const ts = projTasks(name), open = ts.filter(active).length, c = PROJ.closed.get(name);
+  const badge = isClosed ? (c && c.at ? `<span class="pl-x">ปิด ${esc(thDate(c.at.slice(0, 10)))}${c.by ? ' · ' + esc(who(c.by)) : ''}</span>` : '')
+    : open ? `<span class="pl-n">ค้าง ${open}</span>` : `<span class="pl-n zero">ไม่มีงานค้าง</span>`;
+  let h = `<div class="pl-row" data-pl="${esc(name)}"><div class="nm" data-click="plToggle" data-a1="${esc(name)}">${esc(name)}</div>${badge}
+    <button class="btn ghost sm" title="เปลี่ยนชื่อ / รวม" data-click="plRename" data-a1="${esc(name)}">✏️</button>
+    ${isClosed ? `<button class="btn ghost sm" data-click="plReopen" data-a1="${esc(name)}">เปิดคืน</button>` : `<button class="btn ghost sm" data-click="plClose" data-a1="${esc(name)}">ปิด</button>`}</div>`;
+  if (plOpen === name) {
+    const today = bkk().date, act = ts.filter(active).sort((a, b) => (a.due_date || '9').localeCompare(b.due_date || '9')), rest = ts.filter(d => !active(d)).sort((a, b) => (b.done_at || b.updated_at || '').localeCompare(a.done_at || a.updated_at || ''));
+    h += `<div class="panel" style="margin:0 0 10px">${plMsg ? `<div style="color:var(--late);margin-bottom:6px">${esc(plMsg)}</div>` : ''}${act.length ? '<b>งานค้าง</b>' + act.map(d => row(d, d.due_date ? thDate(d.due_date) : '—', d.due_date && d.due_date < today ? 'late' : '')).join('') : '<div class="pend">ไม่มีงานค้าง</div>'}${rest.length ? `<details style="margin-top:6px"><summary class="pend">งานที่ปิด/ยกเลิกแล้ว (${rest.length})</summary>${rest.map(d => row(d, d.done_at ? thDate(d.done_at.slice(0, 10)) : (STL[d.status] || ''))).join('')}</details>` : ''}</div>`;
+  }
+  return h;
+}
+function renderPlist() {
+  const names = projNames(), act = names.filter(n => !PROJ.closed.has(n)), cl = names.filter(n => PROJ.closed.has(n));
+  const actTxt = { close: 'ปิด', reopen: 'เปิดคืน', rename: 'เปลี่ยนชื่อ', merge: 'รวม' };
+  const hist = PROJ.log.slice(-30).reverse().map(l => `<div class="pend">• ${esc(l.at ? thDate(l.at.slice(0, 10)) + ' ' + l.at.slice(11, 16) : '')} · ${esc(who(l.by))} ${esc(actTxt[l.act] || l.act)} "${esc(l.name)}"${l.to ? ' → "' + esc(l.to) + '"' : ''}${l.n != null ? ' (' + l.n + ' งาน)' : ''}${l.why ? ' · ' + esc(l.why) : ''}</div>`).join('');
+  $('plBody').innerHTML = `<div class="card"><h3>🟢 Active (${act.length})</h3>${act.map(n => plRow(n, false)).join('') || '<div class="pend">ยังไม่มีโปรเจกต์</div>'}</div>
+    <div class="card"><details class="pl" id="plClosed"${cl.includes(plOpen) ? ' open' : ''}><summary>⚪ Closed (${cl.length})</summary>${cl.map(n => plRow(n, true)).join('') || '<div class="pend">ยังไม่มีโปรเจกต์ที่ปิด</div>'}</details></div>
+    ${hist ? `<div class="card"><details class="pl"><summary class="pend" style="font-weight:400">ประวัติการเปลี่ยน (ล่าสุด 30 รายการ)</summary>${hist}</details></div>` : ''}`;
+}
+function plToggle(name) { plMsg = ''; plOpen = plOpen === name ? null : name; renderPlist(); }
+async function plClose(name) {
+  if (plBusy) return;
+  const open = projTasks(name).filter(active);
+  if (open.length) { plOpen = name; plMsg = 'ปิดไม่ได้ — ยังมีงานค้าง ' + open.length + ' งาน ปิดหรือยกเลิกงานเหล่านี้ก่อน'; renderPlist(); return; }
+  if (!confirm('ปิดโปรเจกต์ "' + name + '"?\n(เปิดคืนได้ทุกเมื่อ)')) return;
+  plBusy = true;
+  try { await saveProjects(p => { p.closed.set(name, { at: bkk().iso, by: S.user }); p.log.push({ act: 'close', name, by: S.user, at: bkk().iso }); }); plOpen = null; plMsg = ''; toast('ปิดโปรเจกต์แล้ว'); }
+  catch (e) { toast(e.message); }
+  plBusy = false; renderPlist();
+}
+async function plReopen(name) {
+  if (plBusy) return; plBusy = true;
+  try { await saveProjects(p => { p.closed.delete(name); p.log.push({ act: 'reopen', name, by: S.user, at: bkk().iso }); }); toast('เปิดคืนแล้ว'); }
+  catch (e) { toast(e.message); }
+  plBusy = false; renderPlist();
+}
+async function plRename(name) {
+  if (plBusy) return;
+  let nn = prompt('เปลี่ยนชื่อโปรเจกต์ "' + name + '" เป็น:\n(ถ้าพิมพ์ชื่อที่มีอยู่แล้ว = รวมเป็นโปรเจกต์เดียวกัน)', name);
+  if (nn === null) return; nn = nn.replace(/\s+/g, ' ').trim();
+  if (!nn || nn === name) return;
+  if (!pjOk(nn)) { alert('ชื่อโปรเจกต์ยาวเกิน 120 ตัวอักษร หรือใช้ไม่ได้'); return; }
+  const exists = projNames().includes(nn), ts = projTasks(name);
+  if (exists && !confirm('มีโปรเจกต์ "' + nn + '" อยู่แล้ว\nรวม "' + name + '" เข้าไป? งาน ' + ts.length + ' งานจะย้ายไปอยู่ "' + nn + '"')) return;
+  plBusy = true; let ok = 0; const fail = [];
+  for (const d0 of ts) {
+    const t = T.get(d0.id); if (!t) continue;
+    toast('กำลังย้ายงาน ' + (ok + fail.length + 1) + '/' + ts.length + '…');
+    try { await putTask(Object.assign({}, t.d, { project: nn, updated_by: S.user, updated_at: bkk().iso }), t.etag); ok++; }
+    catch (e) { fail.push(d0.title); }
+  }
+  try {
+    await saveProjects(p => {
+      const wasClosed = p.closed.has(name), tgtClosed = p.closed.has(nn), c = p.closed.get(name);
+      const anyActive = projTasks(nn).some(active);
+      if (!fail.length) p.closed.delete(name);
+      if (anyActive) p.closed.delete(nn);
+      else if (!fail.length && wasClosed && (tgtClosed || !exists)) p.closed.set(nn, c);
+      p.log.push({ act: exists ? 'merge' : 'rename', name, to: nn, n: ok, by: S.user, at: bkk().iso, why: fail.length ? 'ค้าง ' + fail.length + ' งาน' : undefined });
+    });
+  } catch (e) { toast(e.message); }
+  plBusy = false; plOpen = fail.length ? name : null; plMsg = '';
+  if (fail.length) alert('ย้ายได้ ' + ok + '/' + ts.length + ' งาน\nยังเป็นชื่อเดิม ' + fail.length + ' งาน (เน็ตหลุดหรือมีคนแก้พร้อมกัน):\n• ' + fail.slice(0, 8).join('\n• ') + '\n\nกด ✏️ ที่ "' + name + '" แล้วพิมพ์ "' + nn + '" อีกครั้งเพื่อทำต่อ');
+  else toast((exists ? 'รวมแล้ว' : 'เปลี่ยนชื่อแล้ว') + ' · ' + ok + ' งาน');
+  renderPlist();
 }
 
 /* ---------- images ---------- */
@@ -614,7 +739,7 @@ function openForm(d, prefill, parentId) {
   $('fNote').value = ''; pendImgs.fPrev = []; showPend('fPrev');
   $('fNoteWrap').classList.toggle('hide', !!d);
   $('fErr').textContent = '';
-  $('projList').innerHTML = [...new Set([...T.values()].map(x => x.d.project).filter(Boolean))].sort().map(p => `<option value="${esc(p)}">`).join('');
+  $('projList').innerHTML = [...new Set([...T.values()].map(x => x.d.project).filter(p => p && !PROJ.closed.has(p)))].sort().map(p => `<option value="${esc(p)}">`).join('');
   go('form'); setTimeout(() => $('fTitle').focus(), 50);
 }
 async function saveForm() {
@@ -629,6 +754,12 @@ async function saveForm() {
     postReason = prompt('เลื่อนกำหนด ' + thDate(editing.due_date) + ' → ' + thDate($('fDate').value) + '\nเหตุผล (ต้องใส่):', '');
     if (postReason === null) return;
     if (!postReason.trim()) { $('fErr').textContent = 'เปลี่ยนวันกำหนด ต้องใส่เหตุผล'; return; }
+  }
+  const pjIn = $('fProjIn').value.trim();
+  if (pjIn && PROJ.closed.has(pjIn) && !(editing && editing.project === pjIn)) {
+    if (!confirm('โปรเจกต์ "' + pjIn + '" ปิดไปแล้ว\nเปิดคืนแล้วบันทึกงานนี้เข้าไปไหม?')) return;
+    try { await saveProjects(p => { p.closed.delete(pjIn); p.log.push({ act: 'reopen', name: pjIn, by: S.user, at: bkk().iso, why: 'เพิ่มงาน' }); }); }
+    catch (e) { $('fErr').textContent = e.message; return; }
   }
   $('btnSave').disabled = true; $('fErr').textContent = '';
   const n = bkk();
@@ -645,7 +776,7 @@ async function saveForm() {
       const d = Object.assign({}, editing, asg, fol, { title, owner: ow, project: $('fProjIn').value.trim() || null, delegate: $('fDelegate').value.trim() || null, due_date: $('fDate').value || null, start_date: $('fStart').value || null, repeat: $('fRepeat').value || null, due_history: dh, due_time: $('fTime').value || null, star: $('fStar').checked, link: $('fLink').value.trim() || null, updated_by: S.user, updated_at: n.iso });
       withAcc(d, acc);
       await putTask(d, T.get(d.id).etag);
-      await writeLog(d.id, { text: (changed ? 'ผู้รับผิดชอบ: ' + ow.map(who).join(', ') : 'แก้รายละเอียดงาน') + (postReason ? '\n↪ เลื่อนกำหนด ' + thDate(editing.due_date) + ' → ' + thDate(d.due_date) + ' · เหตุผล: ' + postReason.trim() : ''), edit: true });
+      await writeLog(d.id, { text: (changed ? 'ผู้รับผิดชอบ: ' + ow.map(who).join(', ') : 'แก้รายละเอียดงาน') + (title !== editing.title ? '\n✏️ ชื่องานเดิม: ' + editing.title + ' → ชื่อใหม่: ' + title : '') + ((editing.project || null) !== (d.project || null) ? '\n📁 โปรเจกต์: ' + (editing.project || '(ไม่มี)') + ' → ' + (d.project || '(ไม่มี)') : '') + (postReason ? '\n↪ เลื่อนกำหนด ' + thDate(editing.due_date) + ' → ' + thDate(d.due_date) + ' · เหตุผล: ' + postReason.trim() : ''), edit: true });
       toast('บันทึกแล้ว'); openDetail(d.id);
     } else {
       const id = 'T' + n.stamp + '-' + rand4();
@@ -1050,6 +1181,10 @@ const ACT = { acceptTask,
   passHint,
   pickImgsEl(p) { pickImgs(this, p); },
   pickProfile,
+  plClose,
+  plRename,
+  plReopen,
+  plToggle,
   printPage() { window.print(); },
   reassign,
   rejectTask,
