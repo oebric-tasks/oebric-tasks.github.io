@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-DpEJgrAHtKM2OEVlXxveG1MWWIFsqJb1K/puMjdIPT4='; style-src 'unsafe-inline'; connect-src https://oc2.dida.psu.ac.th; img-src blob: data:; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-KE7gVK1FkCfUSMuLj3EnCC9xUQS4un0Px9ln5kW9STM='; style-src 'unsafe-inline'; connect-src https://oc2.dida.psu.ac.th; img-src blob: data:; base-uri 'none'; form-action 'none'">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="งาน OEBRIC">
 <title>งาน OEBRIC</title>
@@ -22,6 +22,7 @@ h2{font-size:22px;margin:4px 0} .sub{color:var(--mute);font-size:14px;margin:0 0
 .card h3{font-size:16px;margin:0 0 4px}
 .note{background:#fffbe8;border:1px dashed #d9c46a;border-radius:10px;padding:10px 14px;font-size:14px;margin:12px 0}
 .err{color:var(--late);font-size:15px;margin-top:8px;white-space:pre-line}
+.tag.pair{background:#f3e8ff;color:#6b3fa0}
 .tag{display:inline-block;font-size:13px;border-radius:6px;padding:1px 8px;margin-right:4px;white-space:nowrap}
 .w-chanon{background:var(--ck-bg);color:var(--ck)} .w-apinya{background:var(--mi-bg);color:var(--mi)}
 .proj{background:#eef0f3;color:#374151}
@@ -140,13 +141,14 @@ body.present main{max-width:1400px;font-size:22px}body.present .wk .li{font-size
       <textarea id="qText" class="qbox" placeholder="พิมพ์อะไรก็ได้ เดี๋ยวค่อยจัด…"></textarea>
       <input type="file" id="qImg" accept="image/*" multiple class="hide" data-change="pickImgsEl" data-a1="qPrev">
       <div id="qPrev" class="photos"></div>
+      <label id="qPairWrap" class="hide" style="font-weight:400;margin-top:8px"><input type="checkbox" id="qPair"> 👥 เฉพาะชนนท์กับมายด์ <span class="h">(คนอื่นในทีมไม่เห็นในกล่องรอจัด)</span></label>
       <div style="display:flex;gap:8px;margin-top:10px"><button class="btn ghost sm" data-click="clickId" data-a1="qImg">🖼 รูป</button><button class="btn sm" style="flex:1" id="btnQ" data-click="saveQuick">ส่ง</button></div>
       <div id="qMsg" class="pend" style="margin-top:8px"></div>
     </div>
   </section>
 
   <section id="vToday" class="hide">
-    <h2 id="todayTitle"></h2><p class="sub">ทุกคนในทีมเห็นรายการชุดเดียวกัน · ปุ่มกรองใช้แค่ช่วยดู</p>
+    <h2 id="todayTitle"></h2><p class="sub">ทุกคนในทีมเห็นรายการชุดเดียวกัน<span id="todPairTxt" class="hide"> (ยกเว้นงาน 👥 ที่เห็นเฉพาะชนนท์กับมายด์)</span> · ปุ่มกรองใช้แค่ช่วยดู</p>
     <div class="filter" id="fTod"></div>
     <div class="grid" id="kpi"></div>
     <div id="starWarn"></div>
@@ -196,6 +198,8 @@ body.present main{max-width:1400px;font-size:22px}body.present .wk .li{font-size
       <div id="fDup"></div>
       <label>ใครรับผิดชอบ * <span class="h">(มอบให้คนอื่น → เขาต้องกด "รับงาน")</span></label>
       <div class="seg" id="fOwner"></div>
+      <label id="fPairWrap" class="hide" style="font-weight:400;margin-top:10px"><input type="checkbox" id="fPair" data-change="applyPair"> 👥 <b>เฉพาะชนนท์กับมายด์</b> <span class="h">(ไม่ขึ้นบนเว็บของคนอื่นในทีม · ไม่นับใน 📊 สรุปสัปดาห์ / ใครค้างอะไร · มอบได้แค่ 2 คนนี้)</span></label>
+      <div id="fPairNote" class="h hide" style="margin-top:2px"></div>
       <div class="h" style="margin-top:4px">📵 = ไม่ได้เปิดเว็บ · ระบบกดรับแทน · <b>คุณเป็นผู้ติดตาม</b> (โทร/ไลน์ตามเอง) · ใครในทีมก็กดปิดงานให้ได้</div>
       <div class="two">
         <div><label>โปรเจกต์</label><input id="fProjIn" list="projList" placeholder="เลือกหรือพิมพ์ใหม่"><datalist id="projList"></datalist></div>
@@ -262,7 +266,8 @@ const CFG = {
   NAMES: { chanon: 'อ.ชนนท์', apinya: 'มายด์', 'phachara.suk': 'พี่เพชร', 'atichart.k': 'อ.ปาล์ม', chutarat: 'อ.นาง', nutwhatcha: 'Nutt', apysobhon: 'Stamp', maseetoh: 'เต๊าะ' },
   PEOPLE: ['chanon', 'apinya', 'phachara.suk', 'atichart.k', 'chutarat', 'nutwhatcha', 'apysobhon', 'maseetoh'],
   LEADS: ['chanon', 'apinya', 'phachara.suk', 'atichart.k', 'chutarat'],
-  NOWEB: ['atichart.k', 'chutarat'],   // สมาชิกที่ไม่เปิดเว็บ: ระบบกดรับแทน · คนมอบเป็นผู้ติดตาม
+  NOWEB: ['atichart.k', 'chutarat'],
+  PAIR: ['chanon', 'apinya'],   // 👥 งานเฉพาะชนนท์กับมายด์: ไม่ขึ้นบนเว็บของคนอื่น · ไม่นับใน 📊/ใครค้างอะไร   // สมาชิกที่ไม่เปิดเว็บ: ระบบกดรับแทน · คนมอบเป็นผู้ติดตาม
   POLL_MIN: 3,
   MEET: { dow: 1, from: '12:00' }   // ประชุม OEBRIC จันทร์บ่าย → เปิดหน้าสรุปสัปดาห์เป็นหน้าแรก
 };
@@ -270,7 +275,9 @@ const STORE_KEY = 'oebric_tasks_profiles_v1';
 const STATUS = [['todo', 'ยังไม่เริ่ม'], ['doing', 'กำลังทำ'], ['waiting', 'รอคนอื่น'], ['done', 'เสร็จ']];
 const STL = Object.fromEntries([...STATUS, ['cancelled', 'ยกเลิก'], ['merged', 'ซ้ำ · รวมแล้ว']]);
 let S = { user: '', pass: '', dir: '' };
-let T = new Map();   // id -> {d, etag}
+let T = new Map();   // id -> {d, etag} (เฉพาะงานที่ผู้ใช้คนนี้เห็น)
+let TALL = new Map(); // ทุกไฟล์ (cache ETag)
+let HIDE_PJ = new Set(); // โปรเจกต์ที่มีแต่งาน 👥 (ซ่อนจากคนนอกคู่)
 let LOGS = [];       // file names in logs/
 let INBOX = [];      // [{name, d}]
 let PROJ = { closed: new Map(), log: [] };   // from projects.json
@@ -306,6 +313,9 @@ function toast(m) { const t = $('toast'); t.textContent = m; t.classList.remove(
 function stripW(e) { return e ? e.replace(/^W\//, '') : e; }
 function who(u) { return NAMES[u] || u; }
 function owners(d) { return Array.isArray(d.owner) && d.owner.length ? d.owner : [d.created_by]; }
+function inPair(u) { return CFG.PAIR.includes(u === undefined ? S.user : u); }
+function pairOf(d, m) { if (!d) return false; if (d.pair === true) return true; const p = d.parent && (m || T).get(d.parent); return !!(p && p.d.pair === true); }
+function pairTag(d) { return pairOf(d) ? '<span class="tag pair" title="เฉพาะ อ.ชนนท์กับมายด์ · ไม่ขึ้นบนเว็บของทีม">👥</span>' : ''; }
 function ownerOf(d) { return owners(d)[0]; }
 function accOf(d) { if (d.accepted_by && typeof d.accepted_by === 'object') return d.accepted_by; if (d.accepted !== false) { const m = {}; owners(d).forEach(o => m[o] = d.accepted_at || d.created_at || ''); return m; } return {}; }
 function pendingOwners(d) { if (d.status === 'done' || d.status === 'cancelled') return []; const a = accOf(d); return owners(d).filter(o => !(o in a)); }
@@ -460,6 +470,7 @@ async function start() {
   $('meName').textContent = who(S.user);
   try { const n = await getJson('names.json'); if (isObj(n.d)) for (const k of Object.keys(n.d)) if (safeName(k) && typeof n.d[k] === 'string') NAMES[k] = n.d[k]; } catch (e) { }
   $('meName').textContent = who(S.user);
+  $('qPairWrap').classList.toggle('hide', !inPair()); $('todPairTxt').classList.toggle('hide', !inPair());
   fOwnerFilter = CFG.LEADS.includes(S.user) ? 'all' : S.user;
   await reload(true);
   await saveSeen({ last_open: bkk().iso });
@@ -474,19 +485,26 @@ async function reload(silent) {
     const [tl, ll, il, sl] = await Promise.all([propfind('tasks'), propfind('logs'), propfind('inbox'), propfind('seen')]);
     const keep = new Map(); let skipped = 0;
     await pool(tl.filter(f => f.name.endsWith('.json')), 8, async f => {
-      const id = f.name.replace(/\.json$/, ''), old = T.get(id);
+      const id = f.name.replace(/\.json$/, ''), old = TALL.get(id);
       if (!safeName(id)) { skipped++; return; }
       if (old && old.etag && old.etag === f.etag) { keep.set(id, old); return; }
       let g; try { g = await getJson('tasks/' + f.name); } catch (e) { if (e instanceof SyntaxError) { skipped++; return; } throw e; }
       if (!isObj(g.d) || g.d.id !== id) { skipped++; return; }   // id inside the file must equal its file name
       keep.set(id, { d: g.d, etag: g.etag || f.etag });
     });
-    T = keep;
-    LOGS = ll.map(f => f.name).filter(n => n.endsWith('.json') && safeName(n)).sort();
+    TALL = keep;
+    const hid = new Set(); HIDE_PJ = new Set();
+    if (!inPair()) {
+      const vis = new Set();
+      for (const [id, x] of keep) { if (pairOf(x.d, keep)) { hid.add(id); if (pjOk(x.d.project)) HIDE_PJ.add(x.d.project); } else if (pjOk(x.d.project)) vis.add(x.d.project); }
+      vis.forEach(p => HIDE_PJ.delete(p));
+    }
+    T = hid.size ? new Map([...keep].filter(([id]) => !hid.has(id))) : keep;
+    LOGS = ll.map(f => f.name).filter(n => n.endsWith('.json') && safeName(n) && !hid.has(n.split('__')[0])).sort();
     const sv = {}; await pool(sl.filter(f => f.name.endsWith('.json') && safeName(f.name)), 6, async f => { try { sv[f.name.replace(/\.json$/, '')] = (await getJson('seen/' + f.name)).d; } catch (e) { } });
     SEEN = sv;
     PROJ = await loadProjects();
-    INBOX = (await pool(il.filter(f => f.name.endsWith('.json')), 6, async f => { if (!safeName(f.name)) { skipped++; return null; } try { const d = (await getJson('inbox/' + f.name)).d; if (!isObj(d)) { skipped++; return null; } return { name: f.name, d }; } catch (e) { if (e instanceof SyntaxError) { skipped++; return null; } throw e; } })).filter(Boolean).sort((a, b) => b.name.localeCompare(a.name));
+    INBOX = (await pool(il.filter(f => f.name.endsWith('.json')), 6, async f => { if (!safeName(f.name)) { skipped++; return null; } try { const d = (await getJson('inbox/' + f.name)).d; if (!isObj(d)) { skipped++; return null; } return { name: f.name, d }; } catch (e) { if (e instanceof SyntaxError) { skipped++; return null; } throw e; } })).filter(Boolean).filter(x => inPair() || x.d.pair !== true).sort((a, b) => b.name.localeCompare(a.name));
     if (skipped !== SKIPPED) { SKIPPED = skipped; if (skipped) toast('⚠️ ข้าม ' + skipped + ' ไฟล์ที่ชื่อหรือเนื้อหาผิดรูปแบบ — แจ้ง อ.ชนนท์'); }
     if (!silent) toast('โหลดใหม่แล้ว');
     render();
@@ -507,7 +525,7 @@ function row(d, whenTxt, whenCls) {
   return `<div class="row" data-id="${esc(d.id)}" data-click="openDetail" data-a1="${esc(d.id)}">
     <div class="chk ${d.status === 'done' ? 'done' : ''}" title="กดเสร็จ" data-click="toggleDone" data-a1="${esc(d.id)}"></div>
     <div class="when ${whenCls || ''}">${esc(whenTxt || '—')}</div>
-    <div class="t">${d.star ? '<span class="star">⭐</span> ' : ''}${d.repeat ? '🔁 ' : ''}${esc(d.title)}${subInfo(d)}
+    <div class="t">${pairTag(d)}${d.star ? '<span class="star">⭐</span> ' : ''}${d.repeat ? '🔁 ' : ''}${esc(d.title)}${subInfo(d)}
       <div class="meta">${isPending(d) ? `<span class="pendtag">📨 รอรับ: ${esc(pendingOwners(d).map(who).join(', '))}</span>` : ''}${owners(d).map(tagOf).join('')}${followTxt(d)}${d.project ? `<span class="tag proj">${esc(d.project)}</span>` : ''}<span class="st st-${esc(d.status)}">${esc(STL[d.status] || d.status)}${d.status === 'waiting' && d.waiting_for ? ' · ' + esc(who(d.waiting_for)) : ''}</span>${d.delegate ? ' → ' + esc(d.delegate) : ''}${d.due_time ? ' 🕘' + esc(d.due_time) : ''}${nLog ? ' 📝' + nLog : ''}${(d.due_history || []).length ? ' ↪' + d.due_history.length : ''}${d.status === 'done' && d.done_by ? ' · ✓ โดย ' + esc(who(d.done_by)) : ''}</div></div></div>`;
 }
 function card(title, color, rows) { return rows.length ? `<div class="card"><h3 style="color:${color || 'inherit'}">${title} (${rows.length})</h3>${rows.join('')}</div>` : ''; }
@@ -532,7 +550,7 @@ function renderToday() {
   $('starWarn').innerHTML = act.length >= 5 && starN / act.length > 0.3 ? `<div class="note">⭐ ติดดาวไว้ ${starN} จาก ${act.length} งานที่ค้าง (${Math.round(100 * starN / act.length)}%) — ถ้าสำคัญทุกงาน ก็เหมือนไม่มีงานไหนสำคัญ 😄 ลองเอาดาวออกจากงานที่เตือนแค่ "พรุ่งนี้" ก็พอ</div>` : '';
   const soonTxt = d => { const n = dayDiff(d.due_date, today); return n === 1 ? 'พรุ่งนี้' : 'อีก ' + n + ' วัน'; };
   let h = '';
-  if (INBOX.length) h += `<div class="card" style="border-color:#c9b6e4"><h3 style="color:var(--inb)">📥 รอจัด (${INBOX.length})</h3>${INBOX.map(x => `<div class="row" style="cursor:default"><div class="t">${esc(x.d.text || '(รูป)')}${(x.d.imgs || []).length ? ' 🖼' + x.d.imgs.length : ''}<div class="meta">จดโดย ${esc(who(x.d.by))} · ${esc(thDate(x.d.at.slice(0, 10)))} ${esc(x.d.at.slice(11, 16))}</div></div><button class="btn ghost sm" data-click="sortInbox" data-a1="${esc(x.name)}">จัด</button></div>`).join('')}</div>`;
+  if (INBOX.length) h += `<div class="card" style="border-color:#c9b6e4"><h3 style="color:var(--inb)">📥 รอจัด (${INBOX.length})</h3>${INBOX.map(x => `<div class="row" style="cursor:default"><div class="t">${x.d.pair === true ? '<span class="tag pair">👥</span>' : ''}${esc(x.d.text || '(รูป)')}${(x.d.imgs || []).length ? ' 🖼' + x.d.imgs.length : ''}<div class="meta">จดโดย ${esc(who(x.d.by))} · ${esc(thDate(x.d.at.slice(0, 10)))} ${esc(x.d.at.slice(11, 16))}</div></div><button class="btn ghost sm" data-click="sortInbox" data-a1="${esc(x.name)}">จัด</button></div>`).join('')}</div>`;
   h += card('📨 รอฉันรับ', 'var(--warn)', myPend.map(d => row(d, thDate(d.due_date))));
   h += card('📤 ที่ฉันมอบไป รอเขารับ', 'var(--warn)', theirPend.map(d => row(d, thDate(d.due_date))));
   h += card('⚠ เลยกำหนด', 'var(--late)', late.map(d => row(d, thDate(d.due_date), 'late')));
@@ -595,7 +613,7 @@ async function saveProjects(mut) {
   }
   throw new Error('มีคนแก้รายชื่อโปรเจกต์พร้อมกัน — กดโหลดใหม่แล้วลองอีกครั้ง');
 }
-function projNames() { const s = new Set(); for (const { d } of T.values()) if (pjOk(d.project)) s.add(d.project); for (const k of PROJ.closed.keys()) s.add(k); return [...s].sort((a, b) => a.localeCompare(b, 'th')); }
+function projNames() { const s = new Set(); for (const { d } of T.values()) if (pjOk(d.project)) s.add(d.project); for (const k of PROJ.closed.keys()) if (!HIDE_PJ.has(k)) s.add(k); return [...s].sort((a, b) => a.localeCompare(b, 'th')); }
 function projTasks(name) { return [...T.values()].map(x => x.d).filter(d => d.project === name); }
 function plRow(name, isClosed) {
   const ts = projTasks(name), open = ts.filter(active).length, c = PROJ.closed.get(name);
@@ -613,7 +631,7 @@ function plRow(name, isClosed) {
 function renderPlist() {
   const names = projNames(), act = names.filter(n => !PROJ.closed.has(n)), cl = names.filter(n => PROJ.closed.has(n));
   const actTxt = { close: 'ปิด', reopen: 'เปิดคืน', rename: 'เปลี่ยนชื่อ', merge: 'รวม' };
-  const hist = PROJ.log.slice(-30).reverse().map(l => `<div class="pend">• ${esc(l.at ? thDate(l.at.slice(0, 10)) + ' ' + l.at.slice(11, 16) : '')} · ${esc(who(l.by))} ${esc(actTxt[l.act] || l.act)} "${esc(l.name)}"${l.to ? ' → "' + esc(l.to) + '"' : ''}${l.n != null ? ' (' + l.n + ' งาน)' : ''}${l.why ? ' · ' + esc(l.why) : ''}</div>`).join('');
+  const hist = PROJ.log.filter(l => !HIDE_PJ.has(l.name) && !HIDE_PJ.has(l.to)).slice(-30).reverse().map(l => `<div class="pend">• ${esc(l.at ? thDate(l.at.slice(0, 10)) + ' ' + l.at.slice(11, 16) : '')} · ${esc(who(l.by))} ${esc(actTxt[l.act] || l.act)} "${esc(l.name)}"${l.to ? ' → "' + esc(l.to) + '"' : ''}${l.n != null ? ' (' + l.n + ' งาน)' : ''}${l.why ? ' · ' + esc(l.why) : ''}</div>`).join('');
   $('plBody').innerHTML = `<div class="card"><h3>🟢 Active (${act.length})</h3>${act.map(n => plRow(n, false)).join('') || '<div class="pend">ยังไม่มีโปรเจกต์</div>'}</div>
     <div class="card"><details class="pl" id="plClosed"${cl.includes(plOpen) ? ' open' : ''}><summary>⚪ Closed (${cl.length})</summary>${cl.map(n => plRow(n, true)).join('') || '<div class="pend">ยังไม่มีโปรเจกต์ที่ปิด</div>'}</details></div>
     ${hist ? `<div class="card"><details class="pl"><summary class="pend" style="font-weight:400">ประวัติการเปลี่ยน (ล่าสุด 30 รายการ)</summary>${hist}</details></div>` : ''}`;
@@ -702,9 +720,10 @@ async function saveQuick() {
     const n = bkk(), name = `${n.stamp}-${S.user}-${rand4()}`;
     const imgs = await uploadImgs('qPrev', 'inbox_' + name + '__');
     const d = { by: S.user, at: n.iso, text, imgs };
+    if (inPair() && $('qPair').checked) d.pair = true;
     await putNew('inbox/' + name + '.json', JSON.stringify(d, null, 2));
     INBOX.unshift({ name: name + '.json', d });
-    $('qText').value = ''; $('qMsg').innerHTML = '<span style="color:var(--ok)">✓ ส่งแล้ว ' + n.time + ' → ลงกล่อง "รอจัด"</span>';
+    $('qText').value = ''; $('qPair').checked = false; $('qMsg').innerHTML = '<span style="color:var(--ok)">✓ ส่งแล้ว ' + n.time + ' → ลงกล่อง "รอจัด"</span>';
   } catch (e) { $('qMsg').innerHTML = '<span class="err">ส่งไม่สำเร็จ: ' + esc(e.message) + '</span>'; }
   $('btnQ').disabled = false;
 }
@@ -713,6 +732,12 @@ function sortInbox(name) { const x = INBOX.find(i => i.name === name); if (!x) r
 /* ---------- form ---------- */
 function setOwnerSeg(list) { owner = list.slice(); document.querySelectorAll('#fOwner button').forEach(b => b.classList.toggle('on', owner.includes(b.dataset.o))); }
 function buildOwnerSeg() { $('fOwner').innerHTML = CFG.PEOPLE.map(p => `<button data-o="${esc(p)}"${CFG.NOWEB.includes(p) ? ' title="ไม่ได้เปิดเว็บ — ระบบกดรับแทน คุณเป็นผู้ติดตาม"' : ''}>${esc(who(p))}${p === S.user ? ' (ฉัน)' : ''}${isNoweb(p) ? ' 📵' : ''}</button>`).join(''); document.querySelectorAll('#fOwner button').forEach(b => b.onclick = () => { const o = b.dataset.o; setOwnerSeg(owner.includes(o) ? owner.filter(x => x !== o) : owner.concat(o)); }); }
+function applyPair() {
+  const on = inPair() && $('fPair').checked;
+  document.querySelectorAll('#fOwner button').forEach(b => b.classList.toggle('hide', on && !CFG.PAIR.includes(b.dataset.o)));
+  if (on) setOwnerSeg(owner.filter(o => CFG.PAIR.includes(o)));
+  clearTimeout(dupT); dupT = setTimeout(checkDup, 0);
+}
 function openForm(d, prefill, parentId) {
   editing = d || null;
   subParent = d ? null : (parentId || null);
@@ -730,6 +755,13 @@ function openForm(d, prefill, parentId) {
   const par = subParent && T.get(subParent) ? T.get(subParent).d : null;
   $('fParent').classList.toggle('hide', !par);
   if (par) { $('fParent').innerHTML = '↳ งานย่อยของ <b>' + esc(par.title) + '</b>'; $('fProjIn').value = par.project || ''; $('fDate').value = par.due_date || ''; }
+  const pTop = d && d.parent && T.get(d.parent) ? T.get(d.parent).d : par;   // งานย่อย: 👥 ตามงานหลัก
+  $('fPairWrap').classList.toggle('hide', !inPair());
+  $('fPair').checked = inPair() && (pTop ? pTop.pair === true : d ? d.pair === true : !!(fromInbox && prefill && fromInbox.d.pair === true));
+  $('fPair').disabled = !!pTop;
+  $('fPairNote').classList.toggle('hide', !(inPair() && pTop));
+  $('fPairNote').textContent = pTop ? 'งานย่อย: 👥 เป็นไปตามงานหลัก (แก้ที่งานหลัก)' : '';
+  applyPair();
   $('fDup').innerHTML = '';
   $('fTitle').oninput = () => { clearTimeout(dupT); dupT = setTimeout(checkDup, 250); };
   if (!d && prefill) setTimeout(checkDup, 0);
@@ -746,6 +778,9 @@ async function saveForm() {
   const title = $('fTitle').value.trim();
   if (!title) { $('fErr').textContent = 'กรอกชื่องาน'; return; }
   if (!owner.length) { $('fErr').textContent = 'เลือกผู้รับผิดชอบอย่างน้อย 1 คน'; return; }
+  const pr = inPair() && $('fPair').checked;
+  if (pr && owner.some(o => !CFG.PAIR.includes(o))) { $('fErr').textContent = 'งาน 👥 มอบได้แค่ ' + CFG.PAIR.map(who).join(' / '); return; }
+  if (pr && editing && !editing.parent) { const bad = [...T.values()].map(x => x.d).filter(k => k.parent === editing.id && k.status !== 'merged' && owners(k).some(o => !CFG.PAIR.includes(o))); if (bad.length) { $('fErr').textContent = 'เปลี่ยนเป็น 👥 ไม่ได้: งานย่อยมีคนอื่นรับผิดชอบ (' + bad.map(k => k.title).join(', ') + ')'; return; } }
   if (!$('fDate').value) { $('fErr').textContent = 'ใส่วันกำหนด'; return; }
   if ($('fTime').value && !$('fDate').value) { $('fErr').textContent = 'ใส่เวลาแล้วต้องใส่วันที่ด้วย'; return; }
   if ($('fStart').value && $('fStart').value > $('fDate').value) { $('fErr').textContent = 'วันเริ่มต้องไม่หลังวันกำหนด'; return; }
@@ -774,13 +809,15 @@ async function saveForm() {
       const asg = changed ? Object.assign({ returned_by: null, return_reason: null }, added.some(o => o !== me) ? { assigned_by: me, assigned_at: n.iso } : {}) : {};
       const dh = postReason ? (editing.due_history || []).concat({ from: editing.due_date, to: $('fDate').value, by: me, at: n.iso, reason: postReason.trim() }) : (editing.due_history || []);
       const d = Object.assign({}, editing, asg, fol, { title, owner: ow, project: $('fProjIn').value.trim() || null, delegate: $('fDelegate').value.trim() || null, due_date: $('fDate').value || null, start_date: $('fStart').value || null, repeat: $('fRepeat').value || null, due_history: dh, due_time: $('fTime').value || null, star: $('fStar').checked, link: $('fLink').value.trim() || null, updated_by: S.user, updated_at: n.iso });
+      if (inPair() && !editing.parent) d.pair = pr;
+      const pairChg = inPair() && !editing.parent && (editing.pair === true) !== pr;
       withAcc(d, acc);
       await putTask(d, T.get(d.id).etag);
-      await writeLog(d.id, { text: (changed ? 'ผู้รับผิดชอบ: ' + ow.map(who).join(', ') : 'แก้รายละเอียดงาน') + (title !== editing.title ? '\n✏️ ชื่องานเดิม: ' + editing.title + ' → ชื่อใหม่: ' + title : '') + ((editing.project || null) !== (d.project || null) ? '\n📁 โปรเจกต์: ' + (editing.project || '(ไม่มี)') + ' → ' + (d.project || '(ไม่มี)') : '') + (postReason ? '\n↪ เลื่อนกำหนด ' + thDate(editing.due_date) + ' → ' + thDate(d.due_date) + ' · เหตุผล: ' + postReason.trim() : ''), edit: true });
+      await writeLog(d.id, { text: (changed ? 'ผู้รับผิดชอบ: ' + ow.map(who).join(', ') : 'แก้รายละเอียดงาน') + (title !== editing.title ? '\n✏️ ชื่องานเดิม: ' + editing.title + ' → ชื่อใหม่: ' + title : '') + ((editing.project || null) !== (d.project || null) ? '\n📁 โปรเจกต์: ' + (editing.project || '(ไม่มี)') + ' → ' + (d.project || '(ไม่มี)') : '') + (postReason ? '\n↪ เลื่อนกำหนด ' + thDate(editing.due_date) + ' → ' + thDate(d.due_date) + ' · เหตุผล: ' + postReason.trim() : '') + (pairChg ? (pr ? '\n👥 เปลี่ยนเป็นงานเฉพาะชนนท์กับมายด์' : '\n👥 เปิดให้ทีมเห็น') : ''), edit: true });
       toast('บันทึกแล้ว'); openDetail(d.id);
     } else {
       const id = 'T' + n.stamp + '-' + rand4();
-      const d = { id, title, owner: ow, project: $('fProjIn').value.trim() || null, delegate: $('fDelegate').value.trim() || null, due_date: $('fDate').value || null, start_date: $('fStart').value || null, repeat: $('fRepeat').value || null, parent: subParent || null, due_history: [], due_time: $('fTime').value || null, star: $('fStar').checked, status: 'todo', waiting_for: null, accepted_by: ow.includes(me) ? { [me]: n.iso } : {}, accepted_at: ow.includes(me) ? n.iso : null, assigned_by: toOther ? S.user : null, assigned_at: toOther ? n.iso : null, returned_by: null, return_reason: null, link: $('fLink').value.trim() || null, created_by: S.user, created_at: n.iso, updated_by: S.user, updated_at: n.iso, done_at: null, gcal_event_id: null };
+      const d = { id, title, owner: ow, project: $('fProjIn').value.trim() || null, delegate: $('fDelegate').value.trim() || null, due_date: $('fDate').value || null, start_date: $('fStart').value || null, repeat: $('fRepeat').value || null, parent: subParent || null, due_history: [], due_time: $('fTime').value || null, star: $('fStar').checked, pair: pr && !subParent, status: 'todo', waiting_for: null, accepted_by: ow.includes(me) ? { [me]: n.iso } : {}, accepted_at: ow.includes(me) ? n.iso : null, assigned_by: toOther ? S.user : null, assigned_at: toOther ? n.iso : null, returned_by: null, return_reason: null, link: $('fLink').value.trim() || null, created_by: S.user, created_at: n.iso, updated_by: S.user, updated_at: n.iso, done_at: null, gcal_event_id: null };
       ow.filter(isNoweb).forEach(o => d.accepted_by[o] = n.iso);
       if (ow.some(isNoweb)) { d.follow_by = me; if (!d.accepted_at) d.accepted_at = n.iso; }
       withAcc(d, d.accepted_by);
@@ -791,7 +828,7 @@ async function saveForm() {
         firstText = ('จากกล่องรอจัด (' + who(fromInbox.d.by) + ' ' + fromInbox.d.at.slice(0, 16).replace('T', ' ') + '): ' + (fromInbox.d.text || '')) + (firstText ? '\n' + firstText : '');
         imgs.unshift(...safeImgs(fromInbox.d.imgs));
       }
-      await writeLog(id, { text: 'สร้างงาน' + (toOther ? ' · มอบให้ ' + ow.filter(o => o !== me).map(who).join(', ') : '') + (ow.some(isNoweb) ? ' · ' + ow.filter(isNoweb).map(who).join(', ') + ' ไม่ได้เปิดเว็บ → ระบบรับแทน · ติดตามโดย ' + who(me) : '') + (firstText ? '\n' + firstText : ''), imgs });
+      await writeLog(id, { text: 'สร้างงาน' + (pr && !subParent ? ' · 👥 เฉพาะชนนท์กับมายด์' : '') + (toOther ? ' · มอบให้ ' + ow.filter(o => o !== me).map(who).join(', ') : '') + (ow.some(isNoweb) ? ' · ' + ow.filter(isNoweb).map(who).join(', ') + ' ไม่ได้เปิดเว็บ → ระบบรับแทน · ติดตามโดย ' + who(me) : '') + (firstText ? '\n' + firstText : ''), imgs });
       if (fromInbox) { const r = await dav('DELETE', 'inbox/' + fromInbox.name); if (r.ok || r.status === 404) INBOX = INBOX.filter(x => x !== fromInbox); fromInbox = null; }
       toast('เพิ่มงานแล้ว'); if (subParent && T.has(subParent)) { const pid = subParent; subParent = null; openDetail(pid); } else go(prevView);
     }
@@ -810,7 +847,7 @@ async function openDetail(id) {
   const d = cur;
   $('dTitle').innerHTML = (d.star ? '<span class="star">⭐</span> ' : '') + (d.repeat ? '🔁 ' : '') + esc(d.title);
   $('dPost').classList.add('hide'); $('dMerge').classList.add('hide');
-  $('dSub').innerHTML = owners(d).map(tagOf).join('') + (d.project ? `<span class="tag proj">${esc(d.project)}</span>` : '') + followTxt(d) + (d.start_date ? ' · เริ่ม ' + esc(thDate(d.start_date)) : '') + (d.due_date ? ' · กำหนด ' + esc(thDate(d.due_date, true)) + (d.due_time ? ' ' + esc(d.due_time) : '') : ' · ไม่มีกำหนด') + (d.delegate ? ' · มอบต่อ ' + esc(d.delegate) : '') + ' · สร้างโดย ' + esc(who(d.created_by)) + (d.status === 'done' && d.done_by ? ' · <b style="color:var(--ok)">✓ เสร็จโดย ' + esc(who(d.done_by)) + ' ' + esc(thDate((d.done_at || '').slice(0, 10))) + ' ' + esc((d.done_at || '').slice(11, 16)) + '</b>' : '');
+  $('dSub').innerHTML = pairTag(d) + owners(d).map(tagOf).join('') + (d.project ? `<span class="tag proj">${esc(d.project)}</span>` : '') + followTxt(d) + (d.start_date ? ' · เริ่ม ' + esc(thDate(d.start_date)) : '') + (d.due_date ? ' · กำหนด ' + esc(thDate(d.due_date, true)) + (d.due_time ? ' ' + esc(d.due_time) : '') : ' · ไม่มีกำหนด') + (d.delegate ? ' · มอบต่อ ' + esc(d.delegate) : '') + ' · สร้างโดย ' + esc(who(d.created_by)) + (d.status === 'done' && d.done_by ? ' · <b style="color:var(--ok)">✓ เสร็จโดย ' + esc(who(d.done_by)) + ' ' + esc(thDate((d.done_at || '').slice(0, 10))) + ' ' + esc((d.done_at || '').slice(11, 16)) + '</b>' : '');
   const pOw = pendingOwners(d), acc0 = accOf(d), retMe = d.returned_by && owners(d).length === 1 && owners(d)[0] === S.user;
   const multi = owners(d).length > 1 ? `<div class="pend" style="margin-top:4px">${owners(d).map(o => esc(who(o)) + (o in acc0 ? ' ✓ รับแล้ว' : ' 📨 รอรับ')).join(' · ')}</div>` : '';
   $('dAcc').innerHTML = isPendingFor(d, S.user)
@@ -897,6 +934,7 @@ function similarTasks(title, opt) {
   opt = opt || {}; const out = [];
   for (const { d } of T.values()) {
     if (!active(d) || d.id === opt.exclude) continue;
+    if (opt.pair !== undefined && pairOf(d) !== opt.pair) continue;
     let sc = simT(title, d.title); if (sc < 0.4) continue;
     if (opt.project && d.project === opt.project) sc += 0.1;
     if (opt.due && d.due_date && Math.abs(dayDiff(opt.due, d.due_date)) <= 7) sc += 0.05;
@@ -907,7 +945,7 @@ function similarTasks(title, opt) {
 function checkDup() {
   if (editing || view !== 'form') return;
   const t = $('fTitle').value.trim(); if (t.length < 4) { $('fDup').innerHTML = ''; return; }
-  const c = similarTasks(t, { project: $('fProjIn').value.trim(), due: $('fDate').value });
+  const c = similarTasks(t, { project: $('fProjIn').value.trim(), due: $('fDate').value, pair: inPair() && $('fPair').checked });
   $('fDup').innerHTML = c.length ? `<div class="dup">⚠ <b>มีงานคล้ายกันอยู่แล้ว</b> — ใช่งานเดียวกันไหม?${c.map(({ d }) => `<div class="r"><div>${esc(d.title)}<div class="subbar">${esc(owners(d).map(who).join(', '))} · กำหนด ${esc(thDate(d.due_date))}${d.project ? ' · ' + esc(d.project) : ''}</div></div><button class="btn ghost sm" data-click="openDetail" data-a1="${esc(d.id)}">เปิดงานนี้</button></div>`).join('')}<div class="subbar" style="margin-top:4px">ถ้าไม่ใช่ กด "บันทึก" ต่อได้เลย · ถ้าใช่ เปิดงานเดิมแล้วเขียนบันทึก/เพิ่มตัวเองเป็นเจ้าของร่วมแทน</div></div>` : '';
 }
 function confirmKids(d) { const k = [...T.values()].filter(x => x.d.parent === d.id && active(x.d)); return !k.length || confirm('งานนี้ยังมีงานย่อยค้าง ' + k.length + ' งาน — ปิดงานหลักเลยไหม? (งานย่อยยังค้างอยู่ตามเดิม)'); }
@@ -923,7 +961,7 @@ async function spawnNext(d) {   // งานประจำ: ปิดรอบ�
   const shift = dayDiff(due, d.due_date);
   const start = d.start_date ? new Date(Date.parse(d.start_date + 'T00:00:00Z') + shift * 86400000).toISOString().slice(0, 10) : null;
   const id = 'T' + n.stamp + '-' + rand4(), acc = {}; owners(d).forEach(o => acc[o] = n.iso);
-  const nx = { id, title: d.title, owner: owners(d).slice(), project: d.project || null, delegate: d.delegate || null, due_date: due, due_time: d.due_time || null, start_date: start, star: !!d.star, repeat: d.repeat, series: d.series || d.id, parent: null, due_history: [], status: 'todo', waiting_for: null, accepted_by: acc, accepted_at: n.iso, assigned_by: d.assigned_by || null, assigned_at: d.assigned_by ? n.iso : null, follow_by: d.follow_by || null, returned_by: null, return_reason: null, link: d.link || null, created_by: S.user, created_at: n.iso, updated_by: S.user, updated_at: n.iso, done_at: null, gcal_event_id: null };
+  const nx = { id, title: d.title, owner: owners(d).slice(), project: d.project || null, delegate: d.delegate || null, due_date: due, due_time: d.due_time || null, start_date: start, star: !!d.star, pair: pairOf(d), repeat: d.repeat, series: d.series || d.id, parent: null, due_history: [], status: 'todo', waiting_for: null, accepted_by: acc, accepted_at: n.iso, assigned_by: d.assigned_by || null, assigned_at: d.assigned_by ? n.iso : null, follow_by: d.follow_by || null, returned_by: null, return_reason: null, link: d.link || null, created_by: S.user, created_at: n.iso, updated_by: S.user, updated_at: n.iso, done_at: null, gcal_event_id: null };
   withAcc(nx, acc);
   await putTask(nx, null);
   await writeLog(id, { text: '🔁 งานประจำ ' + (REP[d.repeat] || '') + ' — สร้างรอบนี้อัตโนมัติ หลังรอบ ' + thDate(d.due_date) + ' ปิดโดย ' + who(S.user) });
@@ -961,7 +999,7 @@ function showMerge() {
   box.classList.remove('hide');
   const list = () => {
     const q = $('mQ').value.trim();
-    const c = q ? [...T.values()].map(x => x.d).filter(d => active(d) && d.id !== cur.id && normT(d.title).includes(normT(q))).slice(0, 8) : similarTasks(cur.title, { exclude: cur.id, project: cur.project, due: cur.due_date, n: 6 }).map(x => x.d);
+    const c = q ? [...T.values()].map(x => x.d).filter(d => active(d) && d.id !== cur.id && pairOf(d) === pairOf(cur) && normT(d.title).includes(normT(q))).slice(0, 8) : similarTasks(cur.title, { exclude: cur.id, project: cur.project, due: cur.due_date, n: 6, pair: pairOf(cur) }).map(x => x.d);
     $('mList').innerHTML = c.map(d => `<div class="r" style="display:flex;justify-content:space-between;gap:8px;border-top:1px dashed #ddd;padding:6px 0"><div>${esc(d.title)}<div class="subbar">${esc(owners(d).map(who).join(', '))} · ${esc(thDate(d.due_date))}</div></div><button class="btn sm" data-click="doMerge" data-a1="${esc(cur.id)}" data-a2="${esc(d.id)}">รวมเข้างานนี้</button></div>`).join('') || `<div class="subbar" style="margin-top:6px">${q ? 'ไม่พบ' : 'ไม่พบงานที่ชื่อคล้าย — พิมพ์ค้นชื่องานหลักด้านบน'}</div>`;
   };
   $('mQ').oninput = list; list();
@@ -1023,8 +1061,8 @@ function renderWeek() {
   const M0 = addD(today, (CFG.MEET.dow - wd + 7) % 7), M = addD(M0, 7 * wkOff), S0 = addD(M, -6), nextM = addD(M, 7);
   const inR = s => s && s.slice(0, 10) >= S0 && s.slice(0, 10) <= M;
   $('wkTitle').textContent = '📊 สรุปสัปดาห์ · ' + thDate(S0, true).replace(/ \d{4}$/, '') + ' – ' + thDate(M, true);
-  $('wkSub').textContent = 'รอบประชุม OEBRIC จันทร์ ' + thDate(M) + (wkOff ? '' : ' (รอบนี้)') + ' · ส่วน "เลยกำหนด / ติดรอ / รอรับ" เป็นสถานะ ณ ตอนนี้';
-  const all = [...T.values()].map(x => x.d), act = all.filter(active);
+  $('wkSub').textContent = 'รอบประชุม OEBRIC จันทร์ ' + thDate(M) + (wkOff ? '' : ' (รอบนี้)') + ' · ส่วน "เลยกำหนด / ติดรอ / รอรับ" เป็นสถานะ ณ ตอนนี้' + ([...T.values()].some(x => pairOf(x.d)) ? ' · ไม่นับงาน 👥' : '');
+  const all = [...T.values()].map(x => x.d).filter(d => !pairOf(d)), act = all.filter(active);
   const closed = all.filter(d => d.status === 'done' && inR(d.done_at)).sort((a, b) => (a.done_at || '').localeCompare(b.done_at || ''));
   const late = act.filter(d => d.due_date && d.due_date < today).sort((a, b) => a.due_date.localeCompare(b.due_date));
   const wait = act.filter(d => d.status === 'waiting');
@@ -1138,7 +1176,7 @@ function reassign(id) { const t = T.get(id); if (!t) return; $('modal').classLis
 
 /* ---------- who ---------- */
 function renderWho() {
-  const today = bkk().date, now = Date.now(), all = [...T.values()].map(x => x.d);
+  const today = bkk().date, now = Date.now(), all = [...T.values()].map(x => x.d).filter(d => !pairOf(d));
   const rows = CFG.PEOPLE.concat(Object.keys(NAMES).filter(u => !CFG.PEOPLE.includes(u))).map(p => {
     const mine = all.filter(d => owners(d).includes(p) && active(d));
     const pend = mine.filter(d => isPendingFor(d, p));
@@ -1159,6 +1197,7 @@ function renderWho() {
 /* ---------- event delegation (no inline handlers: values never become JS code) ---------- */
 const HELPERS_EV = ['enterUnlock'];
 const ACT = { acceptTask,
+  applyPair,
   ackLate,
   ackNotes,
   addNote,
