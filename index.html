@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-KE7gVK1FkCfUSMuLj3EnCC9xUQS4un0Px9ln5kW9STM='; style-src 'unsafe-inline'; connect-src https://oc2.dida.psu.ac.th; img-src blob: data:; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-gFzUh69AQPROxU1IFzmid3QS/3r0CMN16UOyhyu9Sng='; style-src 'unsafe-inline'; connect-src https://oc2.dida.psu.ac.th; img-src blob: data:; base-uri 'none'; form-action 'none'">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="งาน OEBRIC">
 <title>งาน OEBRIC</title>
@@ -132,7 +132,8 @@ body.present main{max-width:1400px;font-size:22px}body.present .wk .li{font-size
   <button data-v="search" data-click="go" data-a1="search">🔍 ค้นหา</button>
   <button data-click="openForm">＋ เพิ่มงาน</button>
   <button data-click="reload" title="โหลดใหม่">⟳</button>
-  <span class="me"><span id="meName"></span> · <a href="#" data-click="doLogout" data-pd="1">ออก</a></span>
+  <button data-v="about" data-click="go" data-a1="about" title="เกี่ยวกับแอป">ℹ️</button>
+  <span class="me"><span id="meName"></span> · <span class="h" id="appVer"></span> · <a href="#" data-click="doLogout" data-pd="1">ออก</a></span>
 </header>
 <main>
   <section id="vQuick" class="hide">
@@ -185,8 +186,13 @@ body.present main{max-width:1400px;font-size:22px}body.present .wk .li{font-size
     <div id="projBody"></div>
   </section>
 
+  <section id="vAbout" class="hide">
+    <h2>ℹ️ เกี่ยวกับแอป</h2><p class="sub">แจ้งปัญหา → บอก อ.ชนนท์ พร้อมเลขรุ่นด้านล่าง</p>
+    <div id="abBody"></div>
+  </section>
+
   <section id="vPlist" class="hide">
-    <h2>📁 รายชื่อโปรเจกต์</h2><p class="sub">กดชื่อเพื่อดูงานในโปรเจกต์ · ✏️ เปลี่ยนชื่อ (ถ้าตรงกับชื่อที่มีอยู่ = รวมเป็นโปรเจกต์เดียว) · ปิดได้เมื่อไม่มีงานค้าง</p>
+    <h2>📁 รายชื่อโปรเจกต์</h2><div id="plSum" class="grid"></div><p class="sub">กดชื่อเพื่อดูงานในโปรเจกต์ · ✏️ เปลี่ยนชื่อ (ถ้าตรงกับชื่อที่มีอยู่ = รวมเป็นโปรเจกต์เดียว) · ปิดได้เมื่อไม่มีงานค้าง</p>
     <div id="plBody"></div>
   </section>
 
@@ -271,6 +277,17 @@ const CFG = {
   POLL_MIN: 3,
   MEET: { dow: 1, from: '12:00' }   // ประชุม OEBRIC จันทร์บ่าย → เปิดหน้าสรุปสัปดาห์เป็นหน้าแรก
 };
+const APP_VER = 'v1.7', APP_DATE = '2026-11-22';   // 🔴 ขึ้นรุ่นใหม่ทุกครั้งที่แก้ index.html (เพิ่มแถวบนสุดของ VERSIONS ด้วย)
+const VERSIONS = [
+  ['v1.7', '2026-11-22', 'แถบสรุปตัวเลขในหน้า 📁 (โปรเจกต์ทั้งหมด · Active · ปิดแล้ว · งานค้าง) · กล่อง 📋 งานค้างทั้งหมดในหน้าวันนี้ · หน้า ℹ️ เกี่ยวกับแอป + เลขรุ่น'],
+  ['v1.6', '2026-11-22', '👥 งานเฉพาะชนนท์กับมายด์ (ทีมไม่เห็น · ไม่นับในประชุม)'],
+  ['v1.5', '2026-11-22', '📁 รายชื่อโปรเจกต์ Active/Closed · ปิด/เปิดคืน · เปลี่ยนชื่อ/รวม'],
+  ['v1.4', '2026-11-21', 'งานซ้ำ/รวม · ค้นหา · เลื่อนกำหนดต้องมีเหตุผล · งานย่อย · งานประจำ · 📊 สรุปสัปดาห์'],
+  ['v1.3', '2026-11-21', 'แก้ความปลอดภัย (CSP · ตรวจชื่อไฟล์)'],
+  ['v1.2', '2026-11-21', 'อ.ปาล์ม/อ.นาง 📵 · ช่องรอใคร · วันเริ่ม'],
+  ['v1.1', '2026-11-21', 'มอบงานให้หลายคน · แต่ละคนกดรับเอง'],
+  ['v1.0', '2026-11-21', 'เปิดใช้กับทีม OEBRIC']
+];
 const STORE_KEY = 'oebric_tasks_profiles_v1';
 const STATUS = [['todo', 'ยังไม่เริ่ม'], ['doing', 'กำลังทำ'], ['waiting', 'รอคนอื่น'], ['done', 'เสร็จ']];
 const STL = Object.fromEntries([...STATUS, ['cancelled', 'ยกเลิก'], ['merged', 'ซ้ำ · รวมแล้ว']]);
@@ -470,6 +487,7 @@ async function start() {
   $('meName').textContent = who(S.user);
   try { const n = await getJson('names.json'); if (isObj(n.d)) for (const k of Object.keys(n.d)) if (safeName(k) && typeof n.d[k] === 'string') NAMES[k] = n.d[k]; } catch (e) { }
   $('meName').textContent = who(S.user);
+  $('appVer').textContent = APP_VER;
   $('qPairWrap').classList.toggle('hide', !inPair()); $('todPairTxt').classList.toggle('hide', !inPair());
   fOwnerFilter = CFG.LEADS.includes(S.user) ? 'all' : S.user;
   await reload(true);
@@ -512,9 +530,9 @@ async function reload(silent) {
 }
 
 /* ---------- navigation ---------- */
-function go(v) { if (v !== 'form' && v !== 'detail') prevView = v; view = v; ['vQuick', 'vToday', 'vWho', 'vProj', 'vPlist', 'vWeek', 'vSearch', 'vForm', 'vDetail'].forEach(x => $(x).classList.add('hide')); $({ quick: 'vQuick', today: 'vToday', who: 'vWho', proj: 'vProj', plist: 'vPlist', week: 'vWeek', search: 'vSearch', form: 'vForm', detail: 'vDetail' }[v]).classList.remove('hide'); document.querySelectorAll('header button[data-v]').forEach(b => b.classList.toggle('on', b.dataset.v === v)); render(); window.scrollTo(0, 0); }
+function go(v) { if (v !== 'form' && v !== 'detail') prevView = v; view = v; ['vQuick', 'vToday', 'vWho', 'vProj', 'vPlist', 'vWeek', 'vSearch', 'vForm', 'vDetail', 'vAbout'].forEach(x => $(x).classList.add('hide')); $({ quick: 'vQuick', today: 'vToday', who: 'vWho', proj: 'vProj', plist: 'vPlist', week: 'vWeek', search: 'vSearch', form: 'vForm', detail: 'vDetail', about: 'vAbout' }[v]).classList.remove('hide'); document.querySelectorAll('header button[data-v]').forEach(b => b.classList.toggle('on', b.dataset.v === v)); render(); window.scrollTo(0, 0); }
 function back() { go(prevView); maybeModal(); }
-function render() { if (view === 'today') renderToday(); if (view === 'proj') renderProj(); if (view === 'plist') renderPlist(); if (view === 'who') renderWho(); if (view === 'week') renderWeek(); if (view === 'search') doSearch(); }
+function render() { if (view === 'today') renderToday(); if (view === 'proj') renderProj(); if (view === 'plist') renderPlist(); if (view === 'who') renderWho(); if (view === 'week') renderWeek(); if (view === 'search') doSearch(); if (view === 'about') renderAbout(); }
 
 /* ---------- lists ---------- */
 function active(d) { return d.status !== 'done' && d.status !== 'cancelled' && d.status !== 'merged'; }
@@ -545,7 +563,8 @@ function renderToday() {
   const wait = act.filter(d => d.status === 'waiting' && !shown.has(d.id)).sort(byDue);
   const nodue = act.filter(d => !d.due_date && d.status !== 'waiting').sort((a, b) => (b.star ? 1 : 0) - (a.star ? 1 : 0));
   const done = all.filter(d => d.status === 'done' && d.done_at && d.done_at.slice(0, 10) === today).sort((a, b) => b.done_at.localeCompare(a.done_at));
-  $('kpi').innerHTML = [[late.length, 'เลยกำหนด', 'var(--late)'], [tod.length, 'วันนี้', ''], [soon.length, 'กำลังจะถึง', 'var(--ck)'], [act.filter(d => d.status === 'waiting').length, 'รอคนอื่น', 'var(--warn)'], [done.length, 'เสร็จวันนี้', 'var(--ok)'], [INBOX.length, 'รอจัด', 'var(--inb)']].map(([n, l, c]) => `<div class="kpi"><b style="color:${c}">${n}</b><span>${l}</span></div>`).join('');
+  const allOpen = all.filter(active).length, kLab = fOwnerFilter === 'all' ? '📋 งานค้างทั้งหมด' : '📋 งานค้าง · ' + (fOwnerFilter === S.user ? 'ของฉัน' : who(fOwnerFilter));
+  $('kpi').innerHTML = [[allOpen, kLab, 'var(--ck)'], [late.length, 'เลยกำหนด', 'var(--late)'], [tod.length, 'วันนี้', ''], [soon.length, 'กำลังจะถึง', 'var(--ck)'], [act.filter(d => d.status === 'waiting').length, 'รอคนอื่น', 'var(--warn)'], [done.length, 'เสร็จวันนี้', 'var(--ok)'], [INBOX.length, 'รอจัด', 'var(--inb)']].map(([n, l, c]) => `<div class="kpi"><b style="color:${c}">${n}</b><span>${l}</span></div>`).join('');
   const starN = act.filter(d => d.star).length;
   $('starWarn').innerHTML = act.length >= 5 && starN / act.length > 0.3 ? `<div class="note">⭐ ติดดาวไว้ ${starN} จาก ${act.length} งานที่ค้าง (${Math.round(100 * starN / act.length)}%) — ถ้าสำคัญทุกงาน ก็เหมือนไม่มีงานไหนสำคัญ 😄 ลองเอาดาวออกจากงานที่เตือนแค่ "พรุ่งนี้" ก็พอ</div>` : '';
   const soonTxt = d => { const n = dayDiff(d.due_date, today); return n === 1 ? 'พรุ่งนี้' : 'อีก ' + n + ' วัน'; };
@@ -628,7 +647,21 @@ function plRow(name, isClosed) {
   }
   return h;
 }
+function renderAbout() {
+  $('abBody').innerHTML = `<div class="card"><h3>ระบบงานทีม OEBRIC · <b>${esc(APP_VER)}</b> (${esc(thDate(APP_DATE, true))})</h3>
+    <div class="pend">เข้าระบบเป็น: ${esc(who(S.user))} (${esc(S.user)}) · โฟลเดอร์ข้อมูล: ${esc(S.dir)} บน oc2 · โหลดล่าสุด: ${esc(bkk().time)}</div>
+    <div class="pend">งานในระบบที่คุณเห็น: ${T.size} งาน${inPair() ? ' · คุณเห็นงาน 👥 ด้วย' : ''}</div></div>
+    <div class="card"><h3>ประวัติรุ่น</h3>${VERSIONS.map(([v, d, t]) => `<div class="li"><b>${esc(v)}</b> · ${esc(thDate(d))} — ${esc(t)}</div>`).join('')}</div>`;
+}
+function renderSum() {
+  const names = projNames(), cl = names.filter(n => PROJ.closed.has(n)), act = names.filter(n => !PROJ.closed.has(n));
+  const open = [...T.values()].map(x => x.d).filter(active), noPj = open.filter(d => !pjOk(d.project)).length, pr = open.filter(d => pairOf(d)).length;
+  const empty = act.filter(n => !projTasks(n).some(active)).length;
+  $('plSum').innerHTML = [[names.length, 'โปรเจกต์ทั้งหมด', ''], [act.length, '🟢 Active', 'var(--ok)'], [cl.length, '⚪ ปิดแล้ว', 'var(--mute)'], [open.length, '📋 งานค้าง', 'var(--ck)']].map(([k, l, c]) => `<div class="kpi"><b style="color:${c || 'inherit'}">${k}</b><span>${l}</span></div>`).join('')
+    + `<div class="pend" style="grid-column:1/-1">${[noPj ? 'งานค้างที่ไม่มีโปรเจกต์ ' + noPj : '', inPair() && pr ? '👥 ' + pr + ' งาน (ทีมไม่เห็น)' : '', empty ? `<span style="color:var(--warn)">Active แต่ไม่มีงานค้าง ${empty} โปรเจกต์ — ปิดได้ไหม?</span>` : ''].filter(Boolean).join(' · ')}</div>`;
+}
 function renderPlist() {
+  renderSum();
   const names = projNames(), act = names.filter(n => !PROJ.closed.has(n)), cl = names.filter(n => PROJ.closed.has(n));
   const actTxt = { close: 'ปิด', reopen: 'เปิดคืน', rename: 'เปลี่ยนชื่อ', merge: 'รวม' };
   const hist = PROJ.log.filter(l => !HIDE_PJ.has(l.name) && !HIDE_PJ.has(l.to)).slice(-30).reverse().map(l => `<div class="pend">• ${esc(l.at ? thDate(l.at.slice(0, 10)) + ' ' + l.at.slice(11, 16) : '')} · ${esc(who(l.by))} ${esc(actTxt[l.act] || l.act)} "${esc(l.name)}"${l.to ? ' → "' + esc(l.to) + '"' : ''}${l.n != null ? ' (' + l.n + ' งาน)' : ''}${l.why ? ' · ' + esc(l.why) : ''}</div>`).join('');
