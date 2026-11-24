@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-gFzUh69AQPROxU1IFzmid3QS/3r0CMN16UOyhyu9Sng='; style-src 'unsafe-inline'; connect-src https://oc2.dida.psu.ac.th; img-src blob: data:; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-ZznSwLmwcLg3T+IaQUdpJ9ZLnERbxaROZV1TcWcMo6c='; style-src 'unsafe-inline'; connect-src https://oc2.dida.psu.ac.th; img-src blob: data:; base-uri 'none'; form-action 'none'">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="งาน OEBRIC">
 <title>งาน OEBRIC</title>
@@ -79,6 +79,7 @@ table{width:100%;border-collapse:collapse;font-size:15px}td{border-bottom:1px so
 .dup .r{display:flex;gap:8px;align-items:center;justify-content:space-between;border-top:1px dashed #f0cfc4;padding:6px 0}
 .subbar{font-size:13px;color:var(--mute)}
 .pl-row{display:flex;gap:8px;align-items:center;padding:9px 0;border-top:1px solid var(--line)}.pl-row:first-of-type{border-top:0}.pl-row .nm{flex:1;cursor:pointer;font-size:16px}.pl-row .nm:hover{text-decoration:underline}.pl-n{font-size:13px;border-radius:10px;padding:1px 8px;background:#eef2f8;color:var(--ck);white-space:nowrap}.pl-n.zero{background:#eef6ee;color:var(--ok)}.pl-x{font-size:12px;color:var(--mute)}details.pl>summary{cursor:pointer;font-weight:600;font-size:16px;padding:2px 0}
+.qrow{display:flex;gap:8px;align-items:flex-start;border-top:1px solid var(--line)}.qrow:first-of-type{border-top:0}.qrow .row{border-top:0}.qside{flex:none;width:36px;display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 0}.qn{font-weight:700;font-size:18px;color:var(--ck);line-height:1.3}.qb{display:flex;flex-direction:column;gap:4px}.qb button{border:1px solid var(--line);background:#fff;border-radius:8px;width:34px;height:32px;font-size:15px;cursor:pointer}.qb button:disabled{opacity:.25;cursor:default}.tag.neu{background:#e8f7ee;color:#1f7a44;border:1px solid #9fd3b3}.tag.mine{background:#fff1d6;color:#8a5a00}.qred{border-color:#f0b8a6;background:#fff7f4}
 .panel{background:#f7f6f2;border:1px solid #e2dfd6;border-radius:10px;padding:10px 12px;margin-top:10px}
 .wk h3{margin-bottom:6px}.wk .li{padding:6px 0;border-top:1px solid #efede6;font-size:15px}.wk .li:first-of-type{border-top:0}
 .wk .grp{font-weight:600;margin-top:8px}
@@ -125,6 +126,7 @@ body.present main{max-width:1400px;font-size:22px}body.present .wk .li{font-size
 <header>
   <button data-v="quick" data-click="go" data-a1="quick">⚡ จดไว</button>
   <button data-v="today" data-click="go" data-a1="today">วันนี้</button>
+  <button data-v="queue" data-click="qGo">📌 คิวงาน</button>
   <button data-v="who" data-click="go" data-a1="who">ใครค้างอะไร</button>
   <button data-v="proj" data-click="go" data-a1="proj">ตามโปรเจกต์</button>
   <button data-v="plist" data-click="go" data-a1="plist">📁 รายชื่อโปรเจกต์</button>
@@ -154,6 +156,12 @@ body.present main{max-width:1400px;font-size:22px}body.present .wk .li{font-size
     <div class="grid" id="kpi"></div>
     <div id="starWarn"></div>
     <div id="todayBody"></div>
+  </section>
+
+  <section id="vQueue" class="hide">
+    <h2 id="qTitle">📌 คิวของฉัน</h2><p class="sub" id="qSub"></p>
+    <div class="filter" id="fQueue"></div>
+    <div id="qBody"></div>
   </section>
 
   <section id="vWho" class="hide">
@@ -277,8 +285,9 @@ const CFG = {
   POLL_MIN: 3,
   MEET: { dow: 1, from: '12:00' }   // ประชุม OEBRIC จันทร์บ่าย → เปิดหน้าสรุปสัปดาห์เป็นหน้าแรก
 };
-const APP_VER = 'v1.7', APP_DATE = '2026-11-22';   // 🔴 ขึ้นรุ่นใหม่ทุกครั้งที่แก้ index.html (เพิ่มแถวบนสุดของ VERSIONS ด้วย)
+const APP_VER = 'v1.8', APP_DATE = '2026-11-24';   // 🔴 ขึ้นรุ่นใหม่ทุกครั้งที่แก้ index.html (เพิ่มแถวบนสุดของ VERSIONS ด้วย)
 const VERSIONS = [
+  ['v1.8', '2026-11-24', '📌 คิวงานรายคน: แต่ละคนเรียงเองว่าจะทำอะไรก่อน (▲▼ ⤒) · ทั้งทีมดูคิวกันได้ แต่เลื่อนได้เฉพาะเจ้าของ · งานใหม่ต่อท้ายพร้อมป้าย "ใหม่" · เลยกำหนด/ครบวันนี้ขึ้นแถบแดงบนสุด · 📊 สรุปสัปดาห์โชว์ 3 อันดับแรกของแต่ละคน'],
   ['v1.7', '2026-11-22', 'แถบสรุปตัวเลขในหน้า 📁 (โปรเจกต์ทั้งหมด · Active · ปิดแล้ว · งานค้าง) · กล่อง 📋 งานค้างทั้งหมดในหน้าวันนี้ · หน้า ℹ️ เกี่ยวกับแอป + เลขรุ่น'],
   ['v1.6', '2026-11-22', '👥 งานเฉพาะชนนท์กับมายด์ (ทีมไม่เห็น · ไม่นับในประชุม)'],
   ['v1.5', '2026-11-22', '📁 รายชื่อโปรเจกต์ Active/Closed · ปิด/เปิดคืน · เปลี่ยนชื่อ/รวม'],
@@ -303,6 +312,7 @@ let SEEN = {};       // user -> {last_open, notes_ack, overdue_ack}
 let NAMES = Object.assign({}, CFG.NAMES);
 let view = 'today', prevView = 'today', cur = null, editing = null, fromInbox = null, owner = [], reassignMode = false, fOwnerFilter = 'all', pollT = null;
 let pendImgs = { qPrev: [], fPrev: [], dPrev: [] };
+let qWho = '', qChain = Promise.resolve();
 let wkOff = 0, subParent = null, LOGC = new Map(), dupT = null, sT = null;
 let pendingProfile = '', idleT = null;
 const $ = id => document.getElementById(id);
@@ -530,9 +540,9 @@ async function reload(silent) {
 }
 
 /* ---------- navigation ---------- */
-function go(v) { if (v !== 'form' && v !== 'detail') prevView = v; view = v; ['vQuick', 'vToday', 'vWho', 'vProj', 'vPlist', 'vWeek', 'vSearch', 'vForm', 'vDetail', 'vAbout'].forEach(x => $(x).classList.add('hide')); $({ quick: 'vQuick', today: 'vToday', who: 'vWho', proj: 'vProj', plist: 'vPlist', week: 'vWeek', search: 'vSearch', form: 'vForm', detail: 'vDetail', about: 'vAbout' }[v]).classList.remove('hide'); document.querySelectorAll('header button[data-v]').forEach(b => b.classList.toggle('on', b.dataset.v === v)); render(); window.scrollTo(0, 0); }
+function go(v) { if (v !== 'form' && v !== 'detail') prevView = v; view = v; ['vQuick', 'vToday', 'vQueue', 'vWho', 'vProj', 'vPlist', 'vWeek', 'vSearch', 'vForm', 'vDetail', 'vAbout'].forEach(x => $(x).classList.add('hide')); $({ quick: 'vQuick', today: 'vToday', queue: 'vQueue', who: 'vWho', proj: 'vProj', plist: 'vPlist', week: 'vWeek', search: 'vSearch', form: 'vForm', detail: 'vDetail', about: 'vAbout' }[v]).classList.remove('hide'); document.querySelectorAll('header button[data-v]').forEach(b => b.classList.toggle('on', b.dataset.v === v)); render(); window.scrollTo(0, 0); }
 function back() { go(prevView); maybeModal(); }
-function render() { if (view === 'today') renderToday(); if (view === 'proj') renderProj(); if (view === 'plist') renderPlist(); if (view === 'who') renderWho(); if (view === 'week') renderWeek(); if (view === 'search') doSearch(); if (view === 'about') renderAbout(); }
+function render() { if (view === 'today') renderToday(); if (view === 'proj') renderProj(); if (view === 'plist') renderPlist(); if (view === 'who') renderWho(); if (view === 'queue') renderQueue(); if (view === 'week') renderWeek(); if (view === 'search') doSearch(); if (view === 'about') renderAbout(); }
 
 /* ---------- lists ---------- */
 function active(d) { return d.status !== 'done' && d.status !== 'cancelled' && d.status !== 'merged'; }
@@ -881,6 +891,7 @@ async function openDetail(id) {
   $('dTitle').innerHTML = (d.star ? '<span class="star">⭐</span> ' : '') + (d.repeat ? '🔁 ' : '') + esc(d.title);
   $('dPost').classList.add('hide'); $('dMerge').classList.add('hide');
   $('dSub').innerHTML = pairTag(d) + owners(d).map(tagOf).join('') + (d.project ? `<span class="tag proj">${esc(d.project)}</span>` : '') + followTxt(d) + (d.start_date ? ' · เริ่ม ' + esc(thDate(d.start_date)) : '') + (d.due_date ? ' · กำหนด ' + esc(thDate(d.due_date, true)) + (d.due_time ? ' ' + esc(d.due_time) : '') : ' · ไม่มีกำหนด') + (d.delegate ? ' · มอบต่อ ' + esc(d.delegate) : '') + ' · สร้างโดย ' + esc(who(d.created_by)) + (d.status === 'done' && d.done_by ? ' · <b style="color:var(--ok)">✓ เสร็จโดย ' + esc(who(d.done_by)) + ' ' + esc(thDate((d.done_at || '').slice(0, 10))) + ' ' + esc((d.done_at || '').slice(11, 16)) + '</b>' : '');
+  if (active(d)) { const qp = owners(d).map(o => [o, qPos(d, o)]).filter(([, x]) => x); if (qp.length) $('dSub').innerHTML += '<div class="pend" style="margin-top:4px">📌 ' + qp.map(([o, x]) => 'คิวของ ' + esc(who(o)) + ' อันดับ ' + x.n + '/' + x.of).join(' · ') + '</div>'; }
   const pOw = pendingOwners(d), acc0 = accOf(d), retMe = d.returned_by && owners(d).length === 1 && owners(d)[0] === S.user;
   const multi = owners(d).length > 1 ? `<div class="pend" style="margin-top:4px">${owners(d).map(o => esc(who(o)) + (o in acc0 ? ' ✓ รับแล้ว' : ' 📨 รอรับ')).join(' · ')}</div>` : '';
   $('dAcc').innerHTML = isPendingFor(d, S.user)
@@ -1108,6 +1119,8 @@ function renderWeek() {
   const grp = (arr, key) => { const g = new Map(); arr.forEach(d => { const k = key(d); g.set(k, (g.get(k) || []).concat(d)); }); return [...g.entries()].sort((a, b) => b[1].length - a[1].length); };
   const sec = (t, c, inner, n) => `<div class="card"><h3 style="color:${c || 'inherit'}">${t} (${n})</h3>${inner || '<div class="pend">— ไม่มี —</div>'}</div>`;
   let h = '';
+  if (!wkOff) { const qs = CFG.PEOPLE.map(p => [p, queueOf(p).list.filter(d => !pairOf(d))]).filter(([, l]) => l.length);
+    h += `<div class="card"><h3 style="color:var(--ck)">📌 สัปดาห์นี้แต่ละคนจะทำอะไรก่อน <span class="pend" style="font-weight:400">· 3 อันดับแรกในคิว · ${qs.length} คน</span></h3>${qs.length ? '' : '<div class="pend">— ยังไม่มีใครมีงานในคิว —</div>'}` + qs.map(([p, l]) => `<div class="grp">${esc(who(p))} · คิว ${l.length} งาน</div>` + l.slice(0, 3).map((d, i) => li(d, 'อันดับ ' + (i + 1) + (d.due_date && d.due_date < today ? ' · <b style="color:var(--late)">เลยกำหนด</b>' : ''))).join('')).join('') + '</div>'; }
   h += sec('✓ ปิดแล้วในรอบนี้', 'var(--ok)', grp(closed, d => d.done_by || '?').map(([k, a]) => `<div class="grp">${esc(who(k))} · ${a.length} งาน</div>` + a.map(d => li(d, thDate(d.done_at.slice(0, 10)))).join('')).join(''), closed.length);
   h += sec('⚠ เลยกำหนด', 'var(--late)', late.map(d => li(d, `<b style="color:var(--late)">เลย ${dayDiff(today, d.due_date)} วัน</b>`)).join(''), late.length);
   h += sec('⌛ ติดรอใคร', 'var(--warn)', grp(wait, d => d.waiting_for ? who(d.waiting_for) : 'ไม่ระบุ').map(([k, a]) => `<div class="grp">รอ ${esc(k)} · ${a.length} งาน</div>` + a.map(d => { const ws = d.waiting_since || d.updated_at; return li(d, ws ? 'รอมา ' + Math.max(0, dayDiff(today, ws.slice(0, 10))) + ' วัน' : ''); }).join('')).join(''), wait.length);
@@ -1118,11 +1131,66 @@ function renderWeek() {
   $('wkBody').innerHTML = h;
 }
 
+/* ---------- 📌 queue (v1.8) — personal order stored in seen/<user>.json as `queue: [task ids]` ---------- */
+// queue of u = active tasks u owns and has accepted · saved order first, then tasks not yet placed ("ใหม่", oldest first)
+function qItems(u) { return [...T.values()].map(x => x.d).filter(d => active(d) && owners(d).includes(u) && !isPendingFor(d, u)); }
+function qSaved(u) { const q = (SEEN[u] || {}).queue; return Array.isArray(q) ? q.filter(safeName) : []; }
+function queueOf(u) {
+  const items = qItems(u), m = new Map(items.map(d => [d.id, d])), placed = [], got = new Set();
+  for (const id of qSaved(u)) if (m.has(id) && !got.has(id)) { placed.push(m.get(id)); got.add(id); }
+  const neu = items.filter(d => !got.has(d.id)).sort((a, b) => (a.created_at || '').localeCompare(b.created_at || '') || a.id.localeCompare(b.id));
+  return { placed, neu, list: placed.concat(neu), newSet: new Set(neu.map(d => d.id)) };
+}
+function qPos(d, u) { const L = queueOf(u).list; const i = L.findIndex(x => x.id === d.id); return i < 0 ? null : { n: i + 1, of: L.length }; }
+function qGo() { if (!qWho) qWho = S.user; go('queue'); }
+function qPick(u) { qWho = u; renderQueue(); }
+function renderQueue() {
+  const u = qWho || S.user, me = u === S.user, today = bkk().date, Q = queueOf(u);
+  $('qTitle').textContent = me ? '📌 คิวของฉัน' : '📌 คิวของ ' + who(u);
+  $('qSub').innerHTML = me ? 'เรียงเองว่าจะทำอะไรก่อน · ▲▼ เลื่อนทีละช่อง · ⤒ ขึ้นบนสุด · ทั้งทีมดูคิวนี้ได้ แต่เลื่อนได้เฉพาะคุณ'
+    : '<b>ดูอย่างเดียว</b> · มีแต่ ' + esc(who(u)) + ' ที่เลื่อนได้ · อยากให้งานไหนขยับ → คุยกับเจ้าของคิว';
+  $('fQueue').innerHTML = [[S.user, 'คิวของฉัน']].concat(CFG.PEOPLE.filter(p => p !== S.user).map(p => [p, who(p)])).map(([k, l]) => `<button class="${u === k ? 'on' : ''}" data-click="qPick" data-a1="${esc(k)}">${esc(l)}</button>`).join('');
+  const red = Q.list.filter(d => d.due_date && d.due_date <= today);
+  const when = d => d.due_date ? (d.due_date === today ? 'วันนี้' : thDate(d.due_date)) : '—';
+  const wcls = d => d.due_date && d.due_date <= today ? 'late' : '';
+  let h = '';
+  if (red.length) h += `<div class="card qred"><h3 style="color:var(--late)">🔴 เลยกำหนด / ครบวันนี้ (${red.length}) <span class="pend" style="font-weight:400">— ขึ้นตรงนี้เสมอ ไม่ว่าอยู่ลำดับไหนในคิว</span></h3>${red.map(d => row(d, when(d), 'late')).join('')}</div>`;
+  const L = Q.list, nP = Q.placed.length;
+  const qr = (d, i) => {
+    const isNew = Q.newSet.has(d.id), byMe = !me && (d.assigned_by || d.created_by) === S.user && d.assigned_by !== u;
+    const tags = (isNew ? '<span class="tag neu">ใหม่</span>' : '') + (byMe ? '<span class="tag mine">งานที่ฉันมอบ</span>' : '');
+    const canUp = i > 0, canDown = !isNew && i < nP - 1;
+    const btn = me ? `<div class="qb"><button title="ขึ้นบนสุด" data-click="qMove" data-a1="${esc(d.id)}" data-a2="top"${canUp ? '' : ' disabled'}>⤒</button><button title="ขึ้น 1 ช่อง" data-click="qMove" data-a1="${esc(d.id)}" data-a2="up"${canUp ? '' : ' disabled'}>▲</button><button title="ลง 1 ช่อง" data-click="qMove" data-a1="${esc(d.id)}" data-a2="down"${canDown ? '' : ' disabled'}>▼</button></div>` : '';
+    return `<div class="qrow" data-q="${esc(d.id)}"><div class="qside"><div class="qn">${i + 1}</div>${btn}</div><div style="flex:1;min-width:0">${tags ? `<div style="margin-top:8px">${tags}</div>` : ''}${row(d, when(d), wcls(d))}</div></div>`;
+  };
+  const keep = me && Q.neu.length ? `<button class="btn ghost sm" style="margin:0 0 8px" data-click="qKeepAll">✓ เก็บงานใหม่ ${Q.neu.length} งานเข้าคิวตามลำดับนี้</button>` : '';
+  h += L.length ? `<div class="card"><h3>คิว (${L.length})${Q.neu.length ? ` <span class="pend" style="font-weight:400">· ใหม่ ${Q.neu.length} งานต่อท้าย</span>` : ''}</h3>${keep}${L.map(qr).join('')}</div>` : `<div class="card">${me ? 'ยังไม่มีงานค้างในคิว 🎉' : esc(who(u)) + ' ยังไม่มีงานค้างในคิว'}</div>`;
+  $('qBody').innerHTML = h;
+}
+function qSave(order) {
+  SEEN[S.user] = Object.assign({}, SEEN[S.user] || {}, { queue: order, queue_at: bkk().iso });   // show at once, save in order
+  renderQueue();
+  const snap = order.slice();
+  qChain = qChain.then(() => saveSeen({ queue: snap, queue_at: bkk().iso })).then(ok => { if (!ok) toast('⚠️ บันทึกคิวไม่สำเร็จ — กด ⟳ แล้วลองใหม่'); });
+  return qChain;
+}
+function qMove(id, dir) {
+  if ((qWho || S.user) !== S.user) return;
+  const Q = queueOf(S.user), L = Q.list.map(d => d.id), i = L.indexOf(id); if (i < 0) return;
+  if (dir === 'top') { L.splice(i, 1); L.unshift(id); }
+  else if (dir === 'up' && i > 0) [L[i - 1], L[i]] = [L[i], L[i - 1]];
+  else if (dir === 'down' && i < Q.placed.length - 1 && !Q.newSet.has(id)) [L[i + 1], L[i]] = [L[i], L[i + 1]];
+  else return;
+  const placed = new Set(Q.placed.map(d => d.id).concat(id));
+  return qSave(L.filter(x => placed.has(x)));
+}
+function qKeepAll() { if ((qWho || S.user) !== S.user) return; return qSave(queueOf(S.user).list.map(d => d.id)); }
+
 /* ---------- seen / modal ---------- */
 async function saveSeen(patch) {
   const me = Object.assign({}, SEEN[S.user] || {}, patch);
   SEEN[S.user] = me;
-  try { await dav('PUT', 'seen/' + S.user + '.json', { body: JSON.stringify(me, null, 2), headers: { 'Content-Type': 'application/json' } }); } catch (e) { }
+  try { const r = await dav('PUT', 'seen/' + S.user + '.json', { body: JSON.stringify(me, null, 2), headers: { 'Content-Type': 'application/json' } }); return r.status === 201 || r.status === 204; } catch (e) { return false; }
 }
 function myItems() {
   const me = S.user, today = bkk().date, sv = SEEN[me] || {};
@@ -1230,6 +1298,10 @@ function renderWho() {
 /* ---------- event delegation (no inline handlers: values never become JS code) ---------- */
 const HELPERS_EV = ['enterUnlock'];
 const ACT = { acceptTask,
+  qGo,
+  qKeepAll,
+  qMove,
+  qPick,
   applyPair,
   ackLate,
   ackNotes,
